@@ -229,14 +229,15 @@ const LABEL = {
   helperCnt:"도우미 인원", helperHour:"도우미 시간", day1:"1일차", day2:"2일차",
   conductor:"의전 진행", vehicle:"장의 차량",
   funeralDate:"발인 일자", funeralTime:"발인 시각", cremDate:"화장·하관 일자", cremTime:"화장·하관 시각",
-  memberName:"회원명", productAmt:"상품 금액", payCount:"불입 횟차", paidAmt:"총 불입액", extraAmt:"추가 비용"
+  productAmt:"상품 금액", extraAmt:"추가 금액"
 };
 const GROUPS = [
   ["접수", ["receiptDate","place","religion"]],
   ["기본 사항", ["dName","dSex","origin","age","height","dAddr","cause","causeEtc","method","burialSite",
                 "chief","relation","telHome","telMobile","famSon","famSonW","famDau","famDauH"]],
   ["서비스 · 일정", ["director","coffinDate","coffinTime","helperCnt","helperHour","day1","day2",
-                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]]
+                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]],
+  ["금액", ["productAmt","extraAmt"]]
 ];
 const itemName = k => k.replace(/^(qty|amt)_/, "").replace(/_2$/, " (추가)").replace(/_/g, " ");
 const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));

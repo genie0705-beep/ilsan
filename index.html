@@ -262,6 +262,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .doc .d-total{display:flex;justify-content:space-between;align-items:center;border:1.3px solid #1B2A2E;background:#EDF2F0;padding:6px 14px}
 .doc .d-total span{font-weight:600;letter-spacing:.04em}
 .doc .d-total b{font-size:17px;font-variant-numeric:tabular-nums}
+.doc .d-total b.s{font-size:12px}
 .doc .d-info{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .doc .box{border:1px solid #A3AFAA;padding:7px 10px;font-size:9.6px;line-height:1.55}
 .doc .box b{display:block;font-size:10px;color:#4F7367;margin-bottom:3px;letter-spacing:.04em}
@@ -275,6 +276,26 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .doc .d-signs td.sig em{font-style:normal;color:#A3AFAA;font-size:9.5px}
 .doc .d-foot{display:flex;justify-content:space-between;font-size:9.2px;color:#6C7873;border-top:1px solid #A3AFAA;padding-top:5px}
 
+
+/* 금액 합산 줄 */
+.moneybar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr);gap:8px;align-items:end;margin-top:8px}
+.moneybar .op{font-size:18px;color:var(--muted);padding-bottom:calc(var(--h) / 2 - 11px)}
+.moneybar label em{font-style:normal;color:var(--muted);font-size:.92em}
+.moneybar input{text-align:right;font-variant-numeric:tabular-nums}
+.moneybar #productAmt{border-color:var(--celadon);background:#fff}
+.moneybar #extraAmt{background:var(--tint);color:var(--ink)}
+.moneybar .total{grid-column:auto;height:var(--h);padding:0 12px}
+@media (max-width:640px){
+  .moneybar{grid-template-columns:1fr 1fr}
+  .moneybar .op{display:none}
+  .moneybar .total{grid-column:1 / -1}
+}
+/* 앱 내 브라우저 안내 */
+.inapp{position:sticky;top:0;z-index:30;margin:-10px -10px 10px;padding:10px 14px;
+  background:#FFF6E5;border-bottom:1px solid #E3C48A;color:#6B4A12;font-size:14px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.inapp b{font-weight:700}
+.inapp a{margin-left:auto;background:#4F7367;color:#fff;text-decoration:none;padding:9px 14px;border-radius:3px;font-weight:600;white-space:nowrap}
 /* 좁은 화면 */
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(6,1fr)}
@@ -350,10 +371,18 @@ body > *:not(#printDoc){display:none!important}
     <div class="sec-head"><span class="no">2</span><h2>상품 안내</h2><span class="hint">＋／− 로 수량 입력</span></div>
     <div class="sec-body">
       <div class="goods" id="goods"></div>
-      <div class="total" style="margin-top:8px">
-        <span class="lab">총 잔여금액 <em style="font-style:normal;font-weight:400;color:var(--muted)">(추가용품 금액 합계)</em></span>
-        <span class="val" id="balanceView">0<small>원</small></span>
-        <input type="hidden" name="balance" id="balance">
+      <div class="moneybar">
+        <div class="f unit"><label for="productAmt">상품 금액</label>
+          <input type="text" inputmode="numeric" id="productAmt" name="productAmt" class="won" placeholder="상품 금액 입력"><i>원</i></div>
+        <span class="op">+</span>
+        <div class="f unit"><label for="extraAmt">추가 금액 <em>(추가용품 합계 · 자동)</em></label>
+          <input type="text" id="extraAmt" name="extraAmt" readonly tabindex="-1"><i>원</i></div>
+        <span class="op">=</span>
+        <div class="total">
+          <span class="lab">총 잔여금액</span>
+          <span class="val" id="balanceView">0<small>원</small></span>
+          <input type="hidden" name="balance" id="balance">
+        </div>
       </div>
     </div>
   </section>
@@ -541,12 +570,34 @@ const ITEMS = [];
   });
 })();
 
+/* 카카오톡·네이버 등 앱 안 브라우저 감지 — 파일 저장이 막혀 있음 */
+(function inAppGuard(){
+  const ua = navigator.userAgent || "";
+  const kakao = /KAKAOTALK/i.test(ua);
+  const inApp = kakao || /NAVER\(|Instagram|FBAN|FBAV|Line\/|DaumApps|Whale\/.*inapp|; wv\)/i.test(ua);
+  window.__inApp = inApp;
+  if (!inApp) return;
+  const url = location.href;
+  let href, label = "크롬으로 열기";
+  if (kakao) href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
+  else if (/Android/i.test(ua)) href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+  else { href = null; label = ""; }
+  if (/iPhone|iPad|iPod|Macintosh/i.test(ua)) label = "사파리로 열기";
+  const bar = document.createElement("div");
+  bar.className = "inapp";
+  bar.innerHTML = `<span><b>앱 안에서 열려 PDF 저장이 제한됩니다.</b> 인터넷 브라우저로 열어 사용해 주세요.</span>`
+    + (href ? `<a href="${href}">${label}</a>` : `<span>오른쪽 위 메뉴 → '다른 브라우저로 열기'</span>`);
+  document.body.prepend(bar);
+})();
+
 /* 금액 */
 function sumExtras(){ recalc(); }
 const num = v => Number(String(v ?? "").replace(/[^\d-]/g, "")) || 0;
 const fmt = n => n.toLocaleString("ko-KR");
 function recalc(){
-  const b = $$("[data-amt]").reduce((a, el) => a + num(el.value), 0);
+  const extra = $$("[data-amt]").reduce((a, el) => a + num(el.value), 0);
+  $("#extraAmt").value = extra ? fmt(extra) : "";
+  const b = num($("#productAmt").value) + extra;
   $("#balance").value = b;
   $("#balanceView").innerHTML = fmt(b) + "<small>원</small>";
 }
@@ -753,7 +804,10 @@ function fillDoc(){
       ${goodsTable(["고인 용품","기타 용품"], false)}
       ${goodsTable(["상복","추가용품"], true)}
     </div>
-    <div class="d-total"><span>총 잔여금액 (추가용품 금액 합계)</span><b>${fmt(num(val("balance")))} 원</b></div>
+    <div class="d-total">
+      <span>상품 금액 <b class="s">${fmt(num(val("productAmt")))}원</b> &nbsp;+&nbsp; 추가 금액 <b class="s">${fmt(num(val("extraAmt")))}원</b></span>
+      <span>총 잔여금액 &nbsp;<b>${fmt(num(val("balance")))} 원</b></span>
+    </div>
 
     <h3>3. 서비스 품목 · 장례 일정</h3>
     <table><colgroup><col style="width:12%"><col><col style="width:12%"><col><col style="width:12%"><col></colgroup>
@@ -842,10 +896,21 @@ async function withBusy(btn, label, fn){
   finally { btn.textContent = keep; btn.disabled = false; }
 }
 function saveBlob(blob, name){
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  if (window.__inApp){
+    toast("앱 안 브라우저라 PDF 저장이 막혀 있습니다. 위쪽 버튼으로 브라우저에서 열어 주세요.");
+    return false;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    return true;
+  } catch (e){
+    console.error(e);
+    window.open(URL.createObjectURL(blob), "_blank");   // 다운로드 불가 환경: 새 창에서 열기
+    return true;
+  }
 }
 
 $("#btnSend").addEventListener("click", () => {
@@ -857,7 +922,8 @@ $("#btnSend").addEventListener("click", () => {
       await navigator.share({ files:[file], title:"의전계약서", text:`${$("#dName").value} 고인 의전계약서입니다.` });
     } else {
       saveBlob(blob, pdfName());
-      toast("이 브라우저는 바로 보내기를 지원하지 않아 파일로 저장했습니다.");
+      if (saveBlob(blob, pdfName()))
+        toast("이 브라우저는 바로 보내기가 안 됩니다. 저장된 PDF를 카카오톡에서 파일로 첨부해 주세요.");
     }
   });
 });
@@ -948,10 +1014,14 @@ $("#btnSaveServer").addEventListener("click", () => {
   if (!readyToSend()) return;
   withBusy($("#btnSaveServer"), "저장 중…", async () => {
     const blob = await buildPDF();
-    saveBlob(blob, pdfName());                       // 태블릿 보관용
+    const savedLocal = saveBlob(blob, pdfName());    // 태블릿 보관용
     if (!window.FB){ toast("PDF는 저장했습니다. 서버 연결이 준비되지 않아 본사 전송은 보류됩니다."); return; }
     const res = await window.FB.save(collect(), staffName());
     dirty = false;
+    if (!savedLocal){
+      toast("본사 전송은 진행됩니다. PDF 저장은 위쪽 버튼으로 브라우저에서 열어 다시 눌러 주세요.");
+      return;
+    }
     toast(res.online
       ? "저장했습니다. 본사로 전송 중입니다."
       : "저장했습니다. 통신이 되면 본사로 자동 전송됩니다.");
