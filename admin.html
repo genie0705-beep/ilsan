@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>의전계약서 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--ink:#1B2A2E;--bg:#E9ECEA;--line:#C6CDC9;--soft:#E4E8E6;--celadon:#4F7367;--tint:#EFF3F1;--muted:#6C7873;--r:3px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;font-size:14px;padding:20px}
+.wrap{max-width:1200px;margin:0 auto}
+header.top{display:flex;align-items:baseline;gap:12px;padding:4px 2px 16px}
+header.top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:.06em}
+header.top span{font-size:13px;color:var(--muted)}
+header.top .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:18px}
+input,select{font:inherit;font-size:14px;height:38px;padding:0 10px;background:#FBFCFB;
+  border:1px solid var(--line);border-radius:var(--r);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--celadon);outline-offset:-1px;background:#fff}
+.btn{font:inherit;font-size:13.5px;height:38px;padding:0 14px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--r)}
+.btn.primary{background:var(--celadon);border-color:var(--celadon);color:#fff}
+.btn.ghost{color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;border-bottom:1px solid var(--soft)}
+.filters .grow{flex:1;min-width:160px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--soft);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--tint);position:sticky;top:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#F7F9F8}
+.tag{display:inline-block;font-size:11.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+.tag.wait{border-color:#B4762F;color:#8A5A20}
+.tag.ok{border-color:var(--celadon);color:var(--celadon)}
+a.pdf{color:var(--celadon);text-decoration:none;font-weight:600}
+a.pdf:hover{text-decoration:underline}
+.empty{padding:48px;text-align:center;color:var(--muted)}
+.login{max-width:360px;margin:12vh auto;padding:26px}
+.login h2{margin:0 0 4px;font-size:19px}
+.login p{margin:0 0 18px;font-size:13px;color:var(--muted)}
+.login .f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.login label{font-size:12px;color:var(--muted)}
+.login input{width:100%}
+.err{color:#A2402F;font-size:13px;min-height:18px;padding-top:4px}
+.sum{display:flex;gap:20px;padding:10px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--soft)}
+.sum b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.modal{position:fixed;inset:0;background:rgba(27,42,46,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:50}
+.modal[hidden]{display:none}
+.modal .sheet{background:#fff;border-radius:var(--r);width:100%;max-width:760px;padding:22px 26px 28px}
+.modal .bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:6px}
+.modal h2{margin:0 0 6px;font-size:20px}
+.modal h2 span{font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.modal h3{margin:18px 0 6px;font-size:12.5px;color:var(--celadon);letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:4px}
+.modal dl{display:grid;grid-template-columns:110px 1fr 110px 1fr;gap:5px 10px;margin:0;font-size:13.5px}
+.modal dt{color:var(--muted)}
+.modal dd{margin:0}
+.modal table.it{width:auto;min-width:60%}
+.modal table.it th,.modal table.it td{padding:5px 12px 5px 0;border-bottom:1px solid var(--soft);font-size:13.5px}
+.modal table.it th{background:none;position:static}
+.modal .bal{margin-top:14px;padding:10px 14px;background:var(--tint);border:1px solid var(--celadon);border-radius:var(--r);font-size:14px}
+.modal .bal b{font-size:18px;margin-left:8px}
+.modal .muted{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.modal .sigs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal figure{margin:0;border:1px solid var(--line);border-radius:var(--r);padding:8px;text-align:center}
+.modal figure img{max-width:100%;height:90px;object-fit:contain}
+.modal figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+@media (max-width:640px){ .modal dl{grid-template-columns:90px 1fr} }
+@media print{
+  body{background:#fff;padding:0}
+  .wrap,.modal .bar{display:none!important}
+  .modal{position:static;background:none;padding:0}
+  .modal .sheet{max-width:none;padding:0}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div id="loginView" class="card login" hidden>
+    <h2>의전계약서 관리</h2>
+    <p>관리자 계정으로 로그인하세요.</p>
+    <div class="f"><label for="email">이메일</label><input type="email" id="email" autocomplete="username"></div>
+    <div class="f"><label for="pw">비밀번호</label><input type="password" id="pw" autocomplete="current-password"></div>
+    <button class="btn primary" id="btnLogin" style="width:100%;margin-top:6px">로그인</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+
+  <div id="mainView" hidden>
+    <header class="top">
+      <h1>의전계약서</h1><span id="who"></span>
+      <div class="right">
+        <button class="btn" id="btnCsv">CSV 내려받기</button>
+        <button class="btn ghost" id="btnLogout">로그아웃</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="filters">
+        <input type="date" id="from" title="시작일">
+        <span style="color:var(--muted)">~</span>
+        <input type="date" id="to" title="종료일">
+        <input type="text" id="q" class="grow" placeholder="고인명 · 상주명 · 담당자 검색">
+        <button class="btn" id="btnReload">새로고침</button>
+      </div>
+      <div style="overflow:auto;max-height:70vh">
+        <table>
+          <thead><tr>
+            <th>접수일자</th><th>고인명</th><th>상주명</th><th>연락처</th>
+            <th>장례식장</th><th>담당자</th><th class="num">총 잔여금액</th>
+            <th>서명일시</th><th>계약서</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="empty" hidden>해당 조건의 계약서가 없습니다.</div>
+      </div>
+      <div class="sum">
+        <span>건수 <b id="cnt">0</b></span>
+        <span>총 잔여금액 합계 <b id="sumAmt">0</b>원</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="detail" class="modal" hidden>
+  <div class="sheet">
+    <div class="bar">
+      <button class="btn" id="detailPrint">인쇄</button>
+      <button class="btn ghost" id="detailClose">닫기</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, limit, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyARil-QDNDRF0jP9pmd9d-kjr17akuWs_o",
+  authDomain: "ilsan-3ec79.firebaseapp.com",
+  projectId: "ilsan-3ec79",
+  storageBucket: "ilsan-3ec79.firebasestorage.app",
+  messagingSenderId: "1028059171132",
+  appId: "1:1028059171132:web:104cb67189de7778f87639"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = s => document.querySelector(s);
+let all = [];
+
+onAuthStateChanged(auth, u => {
+  const logged = !!u && !u.isAnonymous;
+  $("#loginView").hidden = logged;
+  $("#mainView").hidden = !logged;
+  if (logged){ $("#who").textContent = u.email; load(); }
+});
+
+$("#btnLogin").addEventListener("click", async () => {
+  $("#loginErr").textContent = "";
+  try { await signInWithEmailAndPassword(auth, $("#email").value.trim(), $("#pw").value); }
+  catch (e){ $("#loginErr").textContent = "로그인에 실패했습니다. 계정을 확인해 주세요."; }
+});
+$("#pw").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnLogin").click(); });
+$("#btnLogout").addEventListener("click", () => signOut(auth));
+$("#btnReload").addEventListener("click", load);
+["#from","#to","#q"].forEach(sel => $(sel).addEventListener("input", render));
+
+const fmt = n => (Number(n) || 0).toLocaleString("ko-KR");
+
+async function load(){
+  const snap = await getDocs(query(collection(db, "contracts"), orderBy("receiptDate", "desc"), limit(500)));
+  all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+}
+
+function filtered(){
+  const from = $("#from").value, to = $("#to").value;
+  const q = $("#q").value.trim().toLowerCase();
+  return all.filter(r => {
+    const d = r.receiptDate || "";
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    if (q){
+      const hay = [r.deceasedName, r.chiefName, r.staff, r.conductor, r.place].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function render(){
+  const rows = filtered();
+  $("#rows").innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.receiptDate || "—"}</td>
+      <td><b>${r.deceasedName || "—"}</b></td>
+      <td>${r.chiefName || "—"}</td>
+      <td>${r.telMobile || "—"}</td>
+      <td>${r.place || "—"}</td>
+      <td>${r.staff || r.conductor || "—"}</td>
+      <td class="num">${fmt(r.balance)}원</td>
+      <td>${r.signedAt || "—"}</td>
+      <td><a class="pdf" href="#" data-view="${r.id}">보기</a></td>
+    </tr>`).join("");
+  $("#empty").hidden = rows.length > 0;
+  $("#cnt").textContent = rows.length;
+  $("#sumAmt").textContent = fmt(rows.reduce((a, r) => a + (Number(r.balance) || 0), 0));
+}
+
+/* 계약 상세 보기 */
+const LABEL = {
+  receiptDate:"접수일자", place:"의전 장소", religion:"종교",
+  dName:"고인 성명", dSex:"성별", origin:"본관", age:"연령", height:"신장", dAddr:"고인 주소",
+  cause:"사망 원인", causeEtc:"기타 사유", method:"장법", burialSite:"장지",
+  chief:"상주 성명", relation:"관계", telHome:"자택", telMobile:"휴대폰",
+  famSon:"자", famSonW:"자부", famDau:"녀", famDauH:"사위",
+  director:"염습/입관", coffinDate:"입관 일자", coffinTime:"입관 시각",
+  helperCnt:"도우미 인원", helperHour:"도우미 시간", day1:"1일차", day2:"2일차",
+  conductor:"의전 진행", vehicle:"장의 차량",
+  funeralDate:"발인 일자", funeralTime:"발인 시각", cremDate:"화장·하관 일자", cremTime:"화장·하관 시각",
+  memberName:"회원명", productAmt:"상품 금액", payCount:"불입 횟차", paidAmt:"총 불입액", extraAmt:"추가 비용"
+};
+const GROUPS = [
+  ["접수", ["receiptDate","place","religion"]],
+  ["기본 사항", ["dName","dSex","origin","age","height","dAddr","cause","causeEtc","method","burialSite",
+                "chief","relation","telHome","telMobile","famSon","famSonW","famDau","famDauH"]],
+  ["서비스 · 일정", ["director","coffinDate","coffinTime","helperCnt","helperHour","day1","day2",
+                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]],
+  ["회원 가입 현황", ["memberName","productAmt","payCount","paidAmt","extraAmt"]]
+];
+const itemName = k => k.replace(/^(qty|amt)_/, "").replace(/_2$/, " (추가)").replace(/_/g, " ");
+const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+function showDetail(r){
+  const p = r.payload || {};
+  let html = `<h2>${esc(r.deceasedName || "—")} <span>${esc(r.receiptDate || "")}</span></h2>`;
+
+  GROUPS.forEach(([title, keys]) => {
+    const rows = keys.filter(k => p[k]).map(k => `<dt>${LABEL[k]}</dt><dd>${esc(p[k])}</dd>`).join("");
+    if (rows) html += `<h3>${title}</h3><dl>${rows}</dl>`;
+  });
+
+  const items = Object.keys(p).filter(k => k.startsWith("qty_") && Number(p[k]) > 0);
+  const amts  = Object.keys(p).filter(k => k.startsWith("amt_") && p[k]);
+  const names = [...new Set([...items.map(itemName), ...amts.map(itemName)])];
+  if (names.length){
+    html += `<h3>상품</h3><table class="it"><tr><th>품목</th><th>수량</th><th>금액</th></tr>` +
+      names.map(n => {
+        const qk = Object.keys(p).find(k => k.startsWith("qty_") && itemName(k) === n);
+        const ak = Object.keys(p).find(k => k.startsWith("amt_") && itemName(k) === n);
+        return `<tr><td>${esc(n)}</td><td>${esc(qk ? p[qk] : "")}</td><td>${esc(ak ? p[ak] + "원" : "")}</td></tr>`;
+      }).join("") + `</table>`;
+  }
+
+  html += `<div class="bal">총 잔여금액 <b>${fmt(r.balance)}원</b></div>`;
+  if (p.payYear || p.payMonth || p.payDay)
+    html += `<p class="muted">지급 약정일 ${esc(p.payYear)}년 ${esc(p.payMonth)}월 ${esc(p.payDay)}일</p>`;
+
+  html += `<h3>서명</h3><div class="sigs">
+    <figure>${p._sigChief ? `<img src="${p._sigChief}" alt="상주 서명">` : "<em>없음</em>"}<figcaption>상주 / 회원 · ${esc(p.chief || "")}</figcaption></figure>
+    <figure>${p._sigStaff ? `<img src="${p._sigStaff}" alt="책임자 서명">` : "<em>없음</em>"}<figcaption>의전 책임자 · ${esc(p.conductor || "")}</figcaption></figure>
+  </div>
+  <p class="muted">서명일시 ${esc(r.signedAt || "—")} · 담당 ${esc(r.staff || r.conductor || "—")} · 문서번호 ${esc(r.id)}</p>`;
+
+  $("#detailBody").innerHTML = html;
+  $("#detail").hidden = false;
+}
+$("#rows").addEventListener("click", e => {
+  const a = e.target.closest("[data-view]"); if (!a) return;
+  e.preventDefault();
+  const r = all.find(x => x.id === a.dataset.view);
+  if (r) showDetail(r);
+});
+$("#detailClose").addEventListener("click", () => { $("#detail").hidden = true; });
+$("#detailPrint").addEventListener("click", () => window.print());
+$("#detail").addEventListener("click", e => { if (e.target.id === "detail") $("#detail").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#detail").hidden = true; });
+
+$("#btnCsv").addEventListener("click", () => {
+  const rows = filtered();
+  const head = ["접수일자","고인명","상주명","연락처","장례식장","담당자","총잔여금액","서명일시","문서번호"];
+  const body = rows.map(r => [r.receiptDate, r.deceasedName, r.chiefName, r.telMobile,
+    r.place, r.staff || r.conductor, r.balance, r.signedAt, r.id]);
+  const csv = "\uFEFF" + [head, ...body]
+    .map(line => line.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = `의전계약서_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
