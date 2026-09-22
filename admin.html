@@ -236,8 +236,7 @@ const GROUPS = [
   ["기본 사항", ["dName","dSex","origin","age","height","dAddr","cause","causeEtc","method","burialSite",
                 "chief","relation","telHome","telMobile","famSon","famSonW","famDau","famDauH"]],
   ["서비스 · 일정", ["director","coffinDate","coffinTime","helperCnt","helperHour","day1","day2",
-                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]],
-  ["회원 가입 현황", ["memberName","productAmt","payCount","paidAmt","extraAmt"]]
+                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]]
 ];
 const itemName = k => k.replace(/^(qty|amt)_/, "").replace(/_2$/, " (추가)").replace(/_/g, " ");
 const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
