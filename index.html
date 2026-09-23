@@ -964,19 +964,17 @@ $("#btnSend").addEventListener("click", () => {
   });
 });
 
-async function shareTo(kind){
+function shareTo(kind){
+  // 공유는 버튼을 누른 그 순간에 바로 호출해야 함 (특히 아이패드·아이폰 사파리)
   const tel = val("telMobile");
-  if (kind === "sms" && tel && navigator.clipboard){
-    try { await navigator.clipboard.writeText(tel.replace(/[^\d]/g, "")); } catch {}
-  }
   const canShare = navigator.canShare && navigator.canShare({ files: [sendFile] });
+  if (kind === "sms" && tel && navigator.clipboard){
+    navigator.clipboard.writeText(tel.replace(/[^\d]/g, "")).catch(() => {});   // 기다리지 않음
+  }
   if (canShare){
-    try {
-      await navigator.share({ files: [sendFile], title: "의전계약서" });
-      $("#sendSheet").hidden = true;
-    } catch (e){
-      if (e.name !== "AbortError") toast("보내기를 열지 못했습니다. 다시 눌러 주세요.");
-    }
+    navigator.share({ files: [sendFile], title: "의전계약서" })
+      .then(() => { $("#sendSheet").hidden = true; })
+      .catch(e => { if (e.name !== "AbortError") toast("보내기를 열지 못했습니다. 다시 눌러 주세요."); });
     return;
   }
   // 공유를 지원하지 않는 브라우저: 파일로 저장 후 안내
