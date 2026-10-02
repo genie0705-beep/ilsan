@@ -1,0 +1,121 @@
+/* 계약서 · 영수증 문서 공통 스타일 — 계약서 화면과 관리자 화면이 함께 사용 */
+/* ── A4 계약서 문서 (인쇄 · PDF · 미리보기 공용) ── */
+.doc{
+  width:210mm;height:297mm;box-sizing:border-box;padding:11mm 12mm 10mm;
+  background:#fff;color:#1B2A2E;
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans CJK KR",sans-serif;
+  font-size:10.4px;line-height:1.35;
+  display:flex;flex-direction:column;gap:6px;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+.doc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc .d-head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px double #1B2A2E;padding:0 2px 8px}
+.doc .d-title{font-size:28px;font-weight:700;letter-spacing:.6em;line-height:1}
+.doc .d-co{font-size:12.5px;font-weight:700;color:#4F7367;letter-spacing:.08em}
+.doc h3{margin:5px 0 0;font-size:11.2px;font-weight:700;color:#4F7367;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.doc h3::before{content:"";width:3px;height:11px;background:#4F7367;display:inline-block}
+.doc table{width:100%;border-collapse:collapse;table-layout:fixed;border:1.3px solid #1B2A2E}
+.doc th,.doc td{border:1px solid #A3AFAA;padding:0 7px;height:24px;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}
+.doc th{background:#EDF2F0;font-weight:600;color:#2E3E42;text-align:center;white-space:nowrap;padding:0 4px}
+.doc td.c{text-align:center}
+.doc td.r{text-align:right;font-variant-numeric:tabular-nums}
+.doc .chk{margin-right:10px;white-space:nowrap}
+.doc .chk.on{font-weight:700}
+.doc .note{display:block;font-size:8.2px;color:#6C7873;line-height:1.25;margin-top:1px}
+.doc .d-goods{flex:1;display:grid;grid-template-columns:1fr 1.3fr;gap:8px;min-height:0}
+.doc .d-goods table{height:100%}
+.doc .d-goods td.grp{background:#F5F8F6;font-weight:600;text-align:center;color:#2E3E42}
+.doc .d-goods tr.on td:not(.grp){font-weight:700}
+.doc .d-goods thead th{height:22px}
+.doc .d-total{display:flex;justify-content:space-between;align-items:center;border:1.3px solid #1B2A2E;background:#EDF2F0;padding:6px 14px}
+.doc .d-total span{font-weight:600;letter-spacing:.04em}
+.doc .d-total b{font-size:17px;font-variant-numeric:tabular-nums}
+.doc .d-total b.s{font-size:12px}
+.doc .d-info{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.doc .box{border:1px solid #A3AFAA;padding:7px 10px;font-size:9.6px;line-height:1.55}
+.doc .box b{display:block;font-size:10px;color:#4F7367;margin-bottom:3px;letter-spacing:.04em}
+.doc .box ul{margin:0;padding-left:13px}
+.doc .box.confirm{border:1.3px solid #4F7367;background:#FAFCFB}
+.doc .pledge{text-align:center;font-size:11.2px;padding:5px 0 2px;letter-spacing:.02em}
+.doc .pledge u{text-decoration:none;border-bottom:1px solid #1B2A2E;padding:0 6px;font-weight:600}
+.doc .d-signs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.doc .d-signs td.sig{height:62px;text-align:center;padding:3px}
+.doc .d-signs td.sig img{max-height:56px;max-width:100%;object-fit:contain}
+.doc .d-signs td.sig em{font-style:normal;color:#A3AFAA;font-size:9.5px}
+.doc .d-foot{display:flex;justify-content:space-between;font-size:9.2px;color:#6C7873;border-top:1px solid #A3AFAA;padding-top:5px}
+
+/* 금액 합산 줄 */
+.moneybar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr);gap:8px;align-items:end;margin-top:8px}
+.moneybar .op{font-size:18px;color:var(--muted);padding-bottom:calc(var(--h) / 2 - 11px)}
+.moneybar label em{font-style:normal;color:var(--muted);font-size:.92em}
+.moneybar input{text-align:right;font-variant-numeric:tabular-nums}
+.moneybar #productAmt{border-color:var(--celadon);background:#fff}
+.moneybar #extraAmt{background:var(--tint);color:var(--ink)}
+.moneybar .total{grid-column:auto;height:var(--h);padding:0 12px}
+@media (max-width:640px){
+  .moneybar{grid-template-columns:1fr 1fr}
+  .moneybar .op{display:none}
+  .moneybar .total{grid-column:1 / -1}
+}
+/* 앱 내 브라우저 안내 */
+.inapp{position:sticky;top:0;z-index:30;margin:-10px -10px 10px;padding:10px 14px;
+  background:#FFF6E5;border-bottom:1px solid #E3C48A;color:#6B4A12;font-size:14px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.inapp b{font-weight:700}
+.inapp a{margin-left:auto;background:#4F7367;color:#fff;text-decoration:none;padding:9px 14px;border-radius:3px;font-weight:600;white-space:nowrap}
+
+/* 고객 전달 선택 창 */
+.send-sheet{position:fixed;inset:0;z-index:58;background:rgba(27,42,46,.45);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom))}
+.send-sheet[hidden]{display:none}
+.send-sheet .panel{background:#fff;border-radius:10px;width:100%;max-width:520px;padding:20px 18px 14px}
+.send-sheet h2{margin:0;font-size:18px;font-weight:700}
+.send-sheet .to{margin:6px 0 14px;color:var(--muted);font-size:14px}
+.send-sheet .to b{color:var(--ink)}
+.send-sheet .warn{margin:-8px 0 12px;padding:9px 11px;background:#FFF6E5;border:1px solid #E3C48A;border-radius:4px;color:#6B4A12;font-size:13px;line-height:1.45}
+.choices2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;min-height:120px;
+  border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font:inherit;color:var(--ink);text-align:center}
+.big .ic{font-size:28px;line-height:1}
+.big b{font-size:16px}
+.big small{font-size:12px;color:var(--muted);line-height:1.35}
+.big.kakao{background:#FEE500;border-color:#E5CE00}
+.big.kakao small{color:#5A4E00}
+.big:active{transform:scale(.98)}
+@media (max-width:420px){ .choices2{grid-template-columns:1fr} .big{min-height:90px} }
+
+/* 임시저장 표시 · 복구 안내 */
+.draftmark{position:fixed;top:8px;right:10px;z-index:24;background:#fff;border:1px solid var(--line);
+  border-radius:20px;padding:5px 12px;font-size:11.5px;color:var(--muted);box-shadow:0 1px 4px rgba(27,42,46,.1)}
+.draftbar{position:sticky;top:0;z-index:29;margin:-10px -10px 10px;padding:10px 14px;
+  background:var(--tint);border-bottom:1px solid var(--celadon);color:var(--ink);font-size:14px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.draftbar button{font:inherit;font-size:13.5px;padding:8px 14px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:#fff}
+.draftbar .go{margin-left:auto;background:var(--celadon);border-color:var(--celadon);color:#fff;font-weight:600}
+
+/* 영수증 — 기존 엑셀 양식 기준 */
+.doc.receipt{padding:13mm 23mm;gap:0;font-size:11px}
+.doc.receipt .r-top{text-align:center}
+.doc.receipt .r-t{font-size:27px;font-weight:700;letter-spacing:.08em}
+.doc.receipt .r-s{font-size:11.5px;margin-top:5px;letter-spacing:.14em}
+.doc.receipt .r-to{display:flex;justify-content:flex-end;align-items:baseline;gap:7px;margin:14px 0 6px}
+.doc.receipt .r-to b{font-size:15px;min-width:90px;text-align:center;border-bottom:1px solid #1B2A2E}
+.doc.receipt .r-to .gw{font-size:12px}
+.doc.receipt table.rt{width:100%;border-collapse:collapse;table-layout:fixed;border:1.4px solid #1B2A2E}
+.doc.receipt .rt th,.doc.receipt .rt td{border:1px solid #6F7B77;height:35px;padding:0 6px;text-align:center;
+  vertical-align:middle;font-size:11px;word-break:keep-all}
+.doc.receipt .rt th{font-weight:600;background:#F3F5F4}
+.doc.receipt .rt td.l{text-align:left}
+.doc.receipt .rt td.nw{white-space:nowrap;font-size:9.6px;letter-spacing:-.02em}
+.doc.receipt .rt td.r{text-align:right;font-variant-numeric:tabular-nums}
+.doc.receipt .rt td.b{font-weight:700}
+.doc.receipt .rt td.co{font-size:17px;font-weight:700;letter-spacing:.04em;height:46px}
+.doc.receipt .rt th.mid{font-size:12.5px;letter-spacing:.1em;height:36px}
+.doc.receipt .rt th.bank{font-size:13px;letter-spacing:.04em;height:40px;background:#fff}
+.doc.receipt .rt th.bank span{color:#C0392B;font-weight:700;letter-spacing:.02em}
+.doc.receipt .rt td.tot{font-size:14px;font-weight:700}
+.doc.receipt .r-end{margin-top:auto;text-align:center;padding-top:20px}
+.doc.receipt .r-end .msg{font-size:13px;letter-spacing:.06em}
+.doc.receipt .r-end .date{font-size:13px;margin-top:12px;letter-spacing:.1em}
+.doc.receipt .r-end .co2{font-size:21px;font-weight:700;margin-top:16px;letter-spacing:.06em;
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.doc.receipt .r-end .seal{width:42px;height:43px;object-fit:contain}

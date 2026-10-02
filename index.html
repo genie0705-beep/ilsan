@@ -9,7 +9,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<link rel="stylesheet" href="contract-doc.css">
+<script src="contract-doc.js"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -198,7 +199,6 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .preview .pw-foot{display:flex;gap:10px;justify-content:flex-end;padding-top:10px}
 .preview .pw-foot .btn{height:46px}
 
-
 /* 금액 입력이 있는 품목 블록 */
 .gcol.wide{grid-column:span 2}
 .gcol h3 em{float:right;font-style:normal;font-weight:400;color:var(--muted);letter-spacing:0}
@@ -215,7 +215,6 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .confirm .meta b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
 @media (max-width:640px){ .two{grid-template-columns:1fr} }
 
-
 .status{
   position:fixed;top:8px;right:10px;z-index:25;
   background:#fff;border:1px solid var(--line);border-radius:20px;
@@ -230,90 +229,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   .masthead .brand{grid-column:1 / -1}
 }
 
-/* ── A4 계약서 문서 (인쇄 · PDF · 미리보기 공용) ── */
-#printDoc{position:fixed;left:-12000px;top:0}
-.doc{
-  width:210mm;height:297mm;box-sizing:border-box;padding:11mm 12mm 10mm;
-  background:#fff;color:#1B2A2E;
-  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans CJK KR",sans-serif;
-  font-size:10.4px;line-height:1.35;
-  display:flex;flex-direction:column;gap:6px;
-  -webkit-print-color-adjust:exact;print-color-adjust:exact;
-}
-.doc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.doc .d-head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px double #1B2A2E;padding:0 2px 8px}
-.doc .d-title{font-size:28px;font-weight:700;letter-spacing:.6em;line-height:1}
-.doc .d-co{font-size:12.5px;font-weight:700;color:#4F7367;letter-spacing:.08em}
-.doc h3{margin:5px 0 0;font-size:11.2px;font-weight:700;color:#4F7367;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
-.doc h3::before{content:"";width:3px;height:11px;background:#4F7367;display:inline-block}
-.doc table{width:100%;border-collapse:collapse;table-layout:fixed;border:1.3px solid #1B2A2E}
-.doc th,.doc td{border:1px solid #A3AFAA;padding:0 7px;height:24px;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}
-.doc th{background:#EDF2F0;font-weight:600;color:#2E3E42;text-align:center;white-space:nowrap;padding:0 4px}
-.doc td.c{text-align:center}
-.doc td.r{text-align:right;font-variant-numeric:tabular-nums}
-.doc .chk{margin-right:10px;white-space:nowrap}
-.doc .chk.on{font-weight:700}
-.doc .note{display:block;font-size:8.2px;color:#6C7873;line-height:1.25;margin-top:1px}
-.doc .d-goods{flex:1;display:grid;grid-template-columns:1fr 1.3fr;gap:8px;min-height:0}
-.doc .d-goods table{height:100%}
-.doc .d-goods td.grp{background:#F5F8F6;font-weight:600;text-align:center;color:#2E3E42}
-.doc .d-goods tr.on td:not(.grp){font-weight:700}
-.doc .d-goods thead th{height:22px}
-.doc .d-total{display:flex;justify-content:space-between;align-items:center;border:1.3px solid #1B2A2E;background:#EDF2F0;padding:6px 14px}
-.doc .d-total span{font-weight:600;letter-spacing:.04em}
-.doc .d-total b{font-size:17px;font-variant-numeric:tabular-nums}
-.doc .d-total b.s{font-size:12px}
-.doc .d-info{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.doc .box{border:1px solid #A3AFAA;padding:7px 10px;font-size:9.6px;line-height:1.55}
-.doc .box b{display:block;font-size:10px;color:#4F7367;margin-bottom:3px;letter-spacing:.04em}
-.doc .box ul{margin:0;padding-left:13px}
-.doc .box.confirm{border:1.3px solid #4F7367;background:#FAFCFB}
-.doc .pledge{text-align:center;font-size:11.2px;padding:5px 0 2px;letter-spacing:.02em}
-.doc .pledge u{text-decoration:none;border-bottom:1px solid #1B2A2E;padding:0 6px;font-weight:600}
-.doc .d-signs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.doc .d-signs td.sig{height:62px;text-align:center;padding:3px}
-.doc .d-signs td.sig img{max-height:56px;max-width:100%;object-fit:contain}
-.doc .d-signs td.sig em{font-style:normal;color:#A3AFAA;font-size:9.5px}
-.doc .d-foot{display:flex;justify-content:space-between;font-size:9.2px;color:#6C7873;border-top:1px solid #A3AFAA;padding-top:5px}
-
-
-/* 금액 합산 줄 */
-.moneybar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr);gap:8px;align-items:end;margin-top:8px}
-.moneybar .op{font-size:18px;color:var(--muted);padding-bottom:calc(var(--h) / 2 - 11px)}
-.moneybar label em{font-style:normal;color:var(--muted);font-size:.92em}
-.moneybar input{text-align:right;font-variant-numeric:tabular-nums}
-.moneybar #productAmt{border-color:var(--celadon);background:#fff}
-.moneybar #extraAmt{background:var(--tint);color:var(--ink)}
-.moneybar .total{grid-column:auto;height:var(--h);padding:0 12px}
-@media (max-width:640px){
-  .moneybar{grid-template-columns:1fr 1fr}
-  .moneybar .op{display:none}
-  .moneybar .total{grid-column:1 / -1}
-}
-/* 앱 내 브라우저 안내 */
-.inapp{position:sticky;top:0;z-index:30;margin:-10px -10px 10px;padding:10px 14px;
-  background:#FFF6E5;border-bottom:1px solid #E3C48A;color:#6B4A12;font-size:14px;
-  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.inapp b{font-weight:700}
-.inapp a{margin-left:auto;background:#4F7367;color:#fff;text-decoration:none;padding:9px 14px;border-radius:3px;font-weight:600;white-space:nowrap}
-
-/* 고객 전달 선택 창 */
-.send-sheet{position:fixed;inset:0;z-index:58;background:rgba(27,42,46,.45);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom))}
-.send-sheet[hidden]{display:none}
-.send-sheet .panel{background:#fff;border-radius:10px;width:100%;max-width:520px;padding:20px 18px 14px}
-.send-sheet h2{margin:0;font-size:18px;font-weight:700}
-.send-sheet .to{margin:6px 0 14px;color:var(--muted);font-size:14px}
-.send-sheet .to b{color:var(--ink)}
-.choices2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.big{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;min-height:120px;
-  border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font:inherit;color:var(--ink);text-align:center}
-.big .ic{font-size:28px;line-height:1}
-.big b{font-size:16px}
-.big small{font-size:12px;color:var(--muted);line-height:1.35}
-.big.kakao{background:#FEE500;border-color:#E5CE00}
-.big.kakao small{color:#5A4E00}
-.big:active{transform:scale(.98)}
-@media (max-width:420px){ .choices2{grid-template-columns:1fr} .big{min-height:90px} }
+#printDoc,#printReceipt{position:fixed;left:-12000px;top:0}
 /* 좁은 화면 */
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(6,1fr)}
@@ -327,8 +243,9 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 <style id="printCSS" media="print">
 @page{size:A4;margin:0}
 html,body{background:#fff!important;padding:0!important;margin:0!important}
-body > *:not(#printDoc){display:none!important}
-#printDoc{position:static!important;left:auto!important}
+body > *:not(.printdoc){display:none!important}
+.printdoc{position:static!important;left:auto!important}
+#printReceipt{break-before:page;page-break-before:always}
 </style>
 </head>
 <body>
@@ -504,7 +421,7 @@ body > *:not(#printDoc){display:none!important}
 
 <div class="preview" id="preview" role="dialog" aria-modal="true" aria-label="계약서 미리보기">
   <div class="pw-head"><b>의전계약서</b><span id="pwHint">화면을 누르면 확대됩니다</span></div>
-  <div class="pw-stage" id="pwStage"><div class="paper"><img id="pwImg" alt="의전계약서 미리보기"></div></div>
+  <div class="pw-stage" id="pwStage"><div class="paper"><img id="pwImg" alt="의전계약서 미리보기"><img id="pwImg2" alt="영수증 미리보기" style="margin-top:10px"></div></div>
   <div class="pw-foot">
     <button type="button" class="btn ghost" id="pwClose">닫기</button>
     <button type="button" class="btn" id="pwSign">서명 받기</button>
@@ -512,12 +429,12 @@ body > *:not(#printDoc){display:none!important}
   </div>
 </div>
 
-
 <!-- 고객 전달 방법 선택 -->
 <div class="send-sheet" id="sendSheet" hidden role="dialog" aria-modal="true" aria-labelledby="sendTitle">
   <div class="panel">
     <h2 id="sendTitle">고객에게 계약서 보내기</h2>
     <p class="to" id="sendTo"></p>
+    <p class="warn" id="sendWarn" hidden></p>
     <div class="choices2">
       <button type="button" class="big kakao" id="sendKakao">
         <span class="ic">💬</span><b>카카오톡으로 보내기</b>
@@ -543,56 +460,53 @@ body > *:not(#printDoc){display:none!important}
   <button type="button" class="btn ghost" id="btnReset">새 계약서</button>
 </div>
 <div class="status" id="status" hidden></div>
+<div class="draftmark" id="draftMark" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* ─────────────────────────────────────────────
    품목 정의 — 여기만 고치면 품목표가 바뀝니다.
    ───────────────────────────────────────────── */
-const GOODS = [
-  { title:"고인 용품", items:[
-    "관","수의",
-    { n:"입관용품", note:"명정·습신·관보·염베·결관바·운아/폐백·다라니경·보공·탈지면·알코올·한지" }
-  ]},
-  { title:"기타 용품", items:["향","초","혼백","영정리본"] },
-  { title:"상복",      items:["남상복셋트","여상복"] },
-  { title:"추가용품",  amount:true, items:["전분함","유골함","리무진","도우미","관","상복"] }
-];
-
+/* 영수증에 찍히는 회사 정보 — 변경 시 여기만 수정 */
 const $  = s => document.querySelector(s);
+/* 입력 화면의 값을 읽는 함수 — 공통 문서 코드에 넘겨줍니다 */
+function val(name){
+  if (name === "_sigChief" || name === "_sigStaff")
+    return pads[name === "_sigChief" ? "sigChief" : "sigStaff"].get();
+  const els = Array.from(document.querySelectorAll(`#form [name="${name}"]`));
+  if (!els.length) return "";
+  if (els[0].type === "radio"){ const on = els.find(e => e.checked); return on ? on.value : ""; }
+  return String(els[0].value || "").trim();
+}
+const fillDoc     = () => fillContract(document.getElementById("printDoc"), val);
+const fillReceipt = () => fillReceiptDoc(document.getElementById("printReceipt"), val);
 const $$ = s => Array.from(document.querySelectorAll(s));
 let dirty = false;
 const markDirty = () => { dirty = true; };
 
-const ITEMS = [];
 (function renderGoods(){
-  const wrap = $("#goods"), used = new Set();
-  GOODS.forEach(col => {
-    const c = document.createElement("div");
-    c.className = "gcol" + (col.amount ? " wide" : "");
-    c.insertAdjacentHTML("beforeend",
-      `<h3>${col.title}${col.amount ? '<em>수량 · 금액</em>' : ''}</h3>`);
-    col.items.forEach(it => {
-      const name = typeof it === "string" ? it : it.n;
-      const note = typeof it === "string" ? "" : (it.note || "");
-      let key = "qty_" + name.replace(/[^0-9A-Za-z가-힣]/g, "_");
-      while (used.has(key)) key += "_2";        // 같은 품목명이 두 번 나올 때 (예: 관)
-      used.add(key);
-      ITEMS.push({ group: col.title, name, note, key, amount: !!col.amount });
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `<span class="nm">${name}${note ? `<em class="note">${note}</em>` : ""}</span>
-        <span class="qty">
-          <button type="button" data-step="-1" aria-label="${name} 줄이기">−</button>
-          <input type="number" inputmode="numeric" min="0" name="${key}" data-qty aria-label="${name} 수량">
-          <button type="button" data-step="1" aria-label="${name} 늘리기">＋</button>
-        </span>` + (col.amount
-          ? `<span class="amt"><input type="text" inputmode="numeric" class="won" data-amt
-               name="amt_${key.slice(4)}" aria-label="${name} 금액" placeholder="금액"><i>원</i></span>`
-          : "");
-      c.appendChild(row);
-    });
-    wrap.appendChild(c);
+  const wrap = $("#goods");
+  let col = null, box = null;
+  ITEMS.forEach(it => {
+    if (it.group !== col){
+      col = it.group;
+      box = document.createElement("div");
+      box.className = "gcol" + (it.amount ? " wide" : "");
+      box.insertAdjacentHTML("beforeend", `<h3>${col}${it.amount ? '<em>수량 · 금액</em>' : ''}</h3>`);
+      wrap.appendChild(box);
+    }
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `<span class="nm">${it.name}${it.note ? `<em class="note">${it.note}</em>` : ""}</span>
+      <span class="qty">
+        <button type="button" data-step="-1" aria-label="${it.name} 줄이기">−</button>
+        <input type="number" inputmode="numeric" min="0" name="${it.key}" data-qty aria-label="${it.name} 수량">
+        <button type="button" data-step="1" aria-label="${it.name} 늘리기">＋</button>
+      </span>` + (it.amount
+        ? `<span class="amt"><input type="text" inputmode="numeric" class="won" data-amt
+             name="amt_${it.key.slice(4)}" aria-label="${it.name} 금액" placeholder="금액"><i>원</i></span>`
+        : "");
+    box.appendChild(row);
   });
   const sync = i => i.closest(".item").classList.toggle("on", Number(i.value) > 0);
   wrap.addEventListener("input", e => {
@@ -608,30 +522,8 @@ const ITEMS = [];
   });
 })();
 
-/* 카카오톡·네이버 등 앱 안 브라우저 감지 — 파일 저장이 막혀 있음 */
-(function inAppGuard(){
-  const ua = navigator.userAgent || "";
-  const kakao = /KAKAOTALK/i.test(ua);
-  const inApp = kakao || /NAVER\(|Instagram|FBAN|FBAV|Line\/|DaumApps|Whale\/.*inapp|; wv\)/i.test(ua);
-  window.__inApp = inApp;
-  if (!inApp) return;
-  const url = location.href;
-  let href, label = "크롬으로 열기";
-  if (kakao) href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
-  else if (/Android/i.test(ua)) href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
-  else { href = null; label = ""; }
-  if (/iPhone|iPad|iPod|Macintosh/i.test(ua)) label = "사파리로 열기";
-  const bar = document.createElement("div");
-  bar.className = "inapp";
-  bar.innerHTML = `<span><b>앱 안에서 열려 PDF 저장이 제한됩니다.</b> 인터넷 브라우저로 열어 사용해 주세요.</span>`
-    + (href ? `<a href="${href}">${label}</a>` : `<span>오른쪽 위 메뉴 → '다른 브라우저로 열기'</span>`);
-  document.body.prepend(bar);
-})();
-
 /* 금액 */
 function sumExtras(){ recalc(); }
-const num = v => Number(String(v ?? "").replace(/[^\d-]/g, "")) || 0;
-const fmt = n => n.toLocaleString("ko-KR");
 function recalc(){
   const extra = $$("[data-amt]").reduce((a, el) => a + num(el.value), 0);
   $("#extraAmt").value = extra ? fmt(extra) : "";
@@ -729,7 +621,7 @@ $("#pvDone").addEventListener("click", () => {
   if (!pv.inked){ toast("서명을 입력해 주세요."); return; }
   pads[pv.target].set(pv.cv.toDataURL("image/png"));
   if (pv.target === "sigChief") stampSignedAt();
-  markDirty();
+  markDirty(); queueDraft();
   const msg = pv.target === "sigChief" ? "상주 서명을 받았습니다." : "책임자 서명을 저장했습니다.";
   closePad(); toast(msg);
 });
@@ -748,170 +640,35 @@ function syncExplainer(){
 $("#conductor").addEventListener("input", syncExplainer);
 syncExplainer();
 
-/* PDF */
-function pdfName(){
-  const n = ($("#dName").value || "무명").replace(/\s/g, "");
-  const d = $("#receiptDate").value || new Date().toISOString().slice(0, 10);
-  return `의전계약서_${n}_${d}.pdf`;
-}
 /* ─────────────────────────────────────────────
-   A4 계약서 문서 생성 — 인쇄 · PDF · 미리보기 공용
+   A4 계약서 · 영수증 문서 생성 (인쇄 · 이미지 · 미리보기 공용)
    ───────────────────────────────────────────── */
-const hx = v => String(v ?? "").replace(/[&<>"]/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[ch]));
-function val(name){
-  const els = $$(`#form [name="${name}"]`);
-  if (!els.length) return "";
-  if (els[0].type === "radio"){ const on = els.find(e => e.checked); return on ? on.value : ""; }
-  return String(els[0].value || "").trim();
-}
-const chk = (name, opts) => opts.map(o => {
-  const on = val(name) === o;
-  return `<span class="chk${on ? " on" : ""}">${on ? "■" : "□"} ${o}</span>`;
-}).join("");
-function dt(d, t){
-  let out = "";
-  if (d){ const [y, m, dd] = d.split("-"); out = `${y}. ${+m}. ${+dd}.`; }
-  if (t) out += (out ? " " : "") + t;
-  return out;
-}
-const unit = (v, u) => v ? `${hx(v)}${u}` : "";
-
-function goodsTable(groups, withAmount){
-  const cols = withAmount
-    ? `<col style="width:17%"><col><col style="width:14%"><col style="width:25%">`
-    : `<col style="width:22%"><col><col style="width:17%">`;
-  let rows = "";
-  groups.forEach(g => {
-    const list = ITEMS.filter(it => it.group === g);
-    list.forEach((it, n) => {
-      const q = val(it.key), a = it.amount ? val("amt_" + it.key.slice(4)) : "";
-      const on = Number(q) > 0 || num(a) > 0;
-      rows += `<tr class="${on ? "on" : ""}">`
-        + (n === 0 ? `<td class="grp" rowspan="${list.length}">${hx(g)}</td>` : "")
-        + `<td>${hx(it.name)}${it.note ? `<span class="note">${hx(it.note)}</span>` : ""}</td>`
-        + `<td class="c">${hx(q)}</td>`
-        + (withAmount ? `<td class="r">${num(a) ? fmt(num(a)) + "원" : ""}</td>` : "")
-        + `</tr>`;
-    });
-  });
-  return `<table><colgroup>${cols}</colgroup>
-    <thead><tr><th>구분</th><th>품목</th><th>수량</th>${withAmount ? "<th>금액</th>" : ""}</tr></thead>
-    <tbody>${rows}</tbody></table>`;
-}
-
-function fillDoc(){
-  const fam = [["자","famSon"],["자부","famSonW"],["녀","famDau"],["사위","famDauH"]]
-    .map(([k, n]) => `${k} ( ${hx(val(n)) || "&nbsp;&nbsp;"} )`).join(" &nbsp;/&nbsp; ");
-  const helper = [unit(val("helperCnt"), "명"), unit(val("helperHour"), "시간")].filter(Boolean).join(" · ");
-  const cause = chk("cause", ["병사","기타"]) + (val("causeEtc") ? `( ${hx(val("causeEtc"))} )` : "");
-  const pay = (v, w) => `<u>${hx(v) || "&nbsp;".repeat(w)}</u>`;
-  const sigImg = id => pads[id].get() ? `<img src="${pads[id].get()}" alt="">` : `<em>(서명)</em>`;
-
-  $("#printDoc").innerHTML = `
-    <div class="d-head">
-      <div class="d-title">의전계약서</div>
-      <div class="d-co">일산상조</div>
-    </div>
-
-    <table><colgroup><col style="width:12%"><col><col style="width:12%"><col><col style="width:9%"><col style="width:17%"></colgroup>
-      <tr><th>접수일자</th><td>${dt(val("receiptDate"))}</td>
-          <th>의전 장소</th><td>${hx(val("place"))}</td>
-          <th>종교</th><td>${hx(val("religion"))}</td></tr>
-    </table>
-
-    <h3>1. 기본 사항</h3>
-    <table><colgroup><col style="width:12%"><col><col style="width:10%"><col style="width:20%"><col style="width:10%"><col style="width:17%"></colgroup>
-      <tr><th>고인 성명</th><td><b>${hx(val("dName"))}</b></td>
-          <th>성별</th><td>${chk("dSex", ["남","여"])}</td>
-          <th>본관</th><td>${hx(val("origin"))}</td></tr>
-      <tr><th>연령</th><td>${unit(val("age"), " 세")}</td>
-          <th>신장</th><td>${unit(val("height"), " cm")}</td>
-          <th>장법</th><td>${chk("method", ["매장","화장"])}</td></tr>
-      <tr><th>고인 주소</th><td colspan="5">${hx(val("dAddr"))}</td></tr>
-      <tr><th>사망 원인</th><td colspan="3">${cause}</td>
-          <th>장지</th><td>${hx(val("burialSite"))}</td></tr>
-      <tr><th>상주 성명</th><td><b>${hx(val("chief"))}</b></td>
-          <th>관계</th><td>${hx(val("relation"))}</td>
-          <th>휴대폰</th><td>${hx(val("telMobile"))}</td></tr>
-      <tr><th>가족 사항</th><td colspan="3">${fam}</td>
-          <th>자택</th><td>${hx(val("telHome"))}</td></tr>
-    </table>
-
-    <h3>2. 상품 안내</h3>
-    <div class="d-goods">
-      ${goodsTable(["고인 용품","기타 용품"], false)}
-      ${goodsTable(["상복","추가용품"], true)}
-    </div>
-    <div class="d-total">
-      <span>상품 금액 <b class="s">${fmt(num(val("productAmt")))}원</b> &nbsp;+&nbsp; 추가 금액 <b class="s">${fmt(num(val("extraAmt")))}원</b></span>
-      <span>총 잔여금액 &nbsp;<b>${fmt(num(val("balance")))} 원</b></span>
-    </div>
-
-    <h3>3. 서비스 품목 · 장례 일정</h3>
-    <table><colgroup><col style="width:12%"><col><col style="width:12%"><col><col style="width:12%"><col></colgroup>
-      <tr><th>염습 / 입관</th><td colspan="3">${hx(val("director"))}</td>
-          <th>입관 일시</th><td>${dt(val("coffinDate"), val("coffinTime"))}</td></tr>
-      <tr><th>장례 도우미</th><td>${helper}</td>
-          <th>1일차</th><td>${hx(val("day1"))}</td>
-          <th>2일차</th><td>${hx(val("day2"))}</td></tr>
-      <tr><th>의전 진행</th><td>${hx(val("conductor"))}</td>
-          <th>장의 차량</th><td colspan="3">${chk("vehicle", ["한국형리무진","버스","캐딜락"])}</td></tr>
-      <tr><th>발인 일시</th><td colspan="2">${dt(val("funeralDate"), val("funeralTime"))}</td>
-          <th>화장·하관</th><td colspan="2">${dt(val("cremDate"), val("cremTime"))}</td></tr>
-    </table>
-
-    <h3>4. 고객 안내사항 · 계약 확인</h3>
-    <div class="d-info">
-      <div class="box"><b>안내사항</b><ul>
-        <li>장례식장 시설사용료, 식대, 제물비용, 제단, 장지비용 등은 별도 금액입니다.</li>
-        <li>당사 상품 이외의 서비스 이용 시 규정에 따른 별도의 추가 금액이 청구됩니다.</li>
-        <li>유가족이 외부에서 반입하신 음식은 일산상조와 아무런 관련이 없습니다.</li>
-      </ul></div>
-      <div class="box confirm"><b>계약 확인</b>
-        본인은 상기 상조상품 수량 및 추가 금액을 항목별로 설명받아 확인하였으며,
-        서명과 동시에 의전 진행이 개시됨을 안내받았습니다.
-        계약 해지 시 해약금이 발생할 수 있다는 점을 고지받았으며, 계약서 1부를 수령하였습니다.
-      </div>
-    </div>
-
-    <div class="pledge">상기 총 잔여금액을 ${pay(val("payYear"), 6)} 년 ${pay(val("payMonth"), 4)} 월 ${pay(val("payDay"), 4)} 일 발인 전 일시에 지불키로 합니다.</div>
-
-    <div class="d-signs">
-      <table><colgroup><col style="width:28%"><col></colgroup>
-        <tr><th rowspan="2">서명인<br>(상주 / 회원)</th><td>성명 &nbsp;<b>${hx(val("chief"))}</b></td></tr>
-        <tr><td class="sig">${sigImg("sigChief")}</td></tr>
-      </table>
-      <table><colgroup><col style="width:28%"><col></colgroup>
-        <tr><th rowspan="2">의전 책임자</th><td>성명 &nbsp;<b>${hx(val("conductor"))}</b></td></tr>
-        <tr><td class="sig">${sigImg("sigStaff")}</td></tr>
-      </table>
-    </div>
-
-    <div class="d-foot">
-      <span>서명일시 ${hx(val("signedAt")) || "—"} &nbsp;·&nbsp; 설명자 ${hx(val("conductor")) || "—"}</span>
-      <span>일산상조</span>
-    </div>`;
-}
-
-async function renderSheetCanvas(){
+async function renderDocCanvas(id){
   if (!window.html2canvas) throw new Error("lib");
-  fillDoc();
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  return await html2canvas($("#printDoc"), {
+  return await html2canvas(document.getElementById(id), {
     scale: 2.2, backgroundColor: "#ffffff", windowWidth: 1200, windowHeight: 1400,
     onclone(doc){
-      const el = doc.getElementById("printDoc");
+      const el = doc.getElementById(id);
       el.style.position = "absolute"; el.style.left = "0"; el.style.top = "0";
     }
   });
 }
-async function buildPDF(){
-  if (!window.jspdf) throw new Error("lib");
-  const canvas = await renderSheetCanvas();
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit:"mm", format:"a4", orientation:"p" });
-  pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, 210, 297);   // A4 전체
-  return pdf.output("blob");
+function imgNames(){
+  const n = (val("dName") || "무명").replace(/\s/g, "");
+  const d = val("receiptDate") || new Date().toISOString().slice(0, 10);
+  return [`의전계약서_${n}_${d}.jpg`, `영수증_${n}_${d}.jpg`];
+}
+function canvasToBlob(canvas){
+  return new Promise(ok => canvas.toBlob(b => ok(b), "image/jpeg", 0.92));
+}
+/* 계약서 · 영수증 JPG 2장 */
+async function buildImages(){
+  fillDoc(); fillReceipt();
+  const [c1, c2] = [await renderDocCanvas("printDoc"), await renderDocCanvas("printReceipt")];
+  const [b1, b2] = [await canvasToBlob(c1), await canvasToBlob(c2)];
+  const [n1, n2] = imgNames();
+  return [new File([b1], n1, { type: "image/jpeg" }), new File([b2], n2, { type: "image/jpeg" })];
 }
 function readyToSend(){
   const miss = [];
@@ -928,8 +685,8 @@ async function withBusy(btn, label, fn){
   catch (err){
     console.error(err);
     toast(err.message === "lib"
-      ? "PDF 모듈을 불러오지 못했습니다. 인터넷 연결을 확인하거나 ‘인쇄’로 저장해 주세요."
-      : "PDF를 만들지 못했습니다. ‘인쇄’로 저장해 주세요.");
+      ? "이미지 모듈을 불러오지 못했습니다. 인터넷 연결을 확인하거나 ‘인쇄’로 저장해 주세요."
+      : "이미지를 만들지 못했습니다. ‘인쇄’로 저장해 주세요.");
   }
   finally { btn.textContent = keep; btn.disabled = false; }
 }
@@ -951,15 +708,20 @@ function saveBlob(blob, name){
   }
 }
 
-/* 고객 전달 — 카카오톡 / 문자 선택 */
-let sendFile = null;
+/* 고객 전달 — 카카오톡 / 문자 선택 (계약서 · 영수증 JPG 2장) */
+let sendFiles = [];
 $("#btnSend").addEventListener("click", () => {
   if (!readyToSend()) return;
   withBusy($("#btnSend"), "만드는 중…", async () => {
-    const blob = await buildPDF();
-    sendFile = new File([blob], pdfName(), { type: "application/pdf" });
+    sendFiles = await buildImages();
     const tel = val("telMobile");
-    $("#sendTo").innerHTML = `받는 분 <b>${hx(val("chief")) || "—"}</b>${tel ? ` · ${hx(tel)}` : ""}`;
+    $("#sendTo").innerHTML = `받는 분 <b>${hx(val("chief")) || "—"}</b>${tel ? ` · ${hx(tel)}` : ""}`
+      + ` <span style="color:var(--muted)">· 계약서 · 영수증 2장</span>`;
+    const ok = !!(navigator.canShare && navigator.canShare({ files: sendFiles }));
+    $("#sendWarn").hidden = ok;
+    if (!ok) $("#sendWarn").textContent = window.__inApp
+      ? "앱 안 브라우저라 바로 보내기가 막혀 있습니다. 화면 위 버튼으로 브라우저에서 열어 주세요."
+      : "이 브라우저는 바로 보내기를 지원하지 않습니다. 버튼을 누르면 이미지를 저장해 드리니 카카오톡에서 첨부해 주세요.";
     $("#sendSheet").hidden = false;
   });
 });
@@ -967,21 +729,30 @@ $("#btnSend").addEventListener("click", () => {
 function shareTo(kind){
   // 공유는 버튼을 누른 그 순간에 바로 호출해야 함 (특히 아이패드·아이폰 사파리)
   const tel = val("telMobile");
-  const canShare = navigator.canShare && navigator.canShare({ files: [sendFile] });
+  const canShare = navigator.canShare && navigator.canShare({ files: sendFiles });
   if (kind === "sms" && tel && navigator.clipboard){
     navigator.clipboard.writeText(tel.replace(/[^\d]/g, "")).catch(() => {});   // 기다리지 않음
   }
   if (canShare){
-    navigator.share({ files: [sendFile], title: "의전계약서" })
+    navigator.share({ files: sendFiles, title: "의전계약서 · 영수증" })
       .then(() => { $("#sendSheet").hidden = true; })
-      .catch(e => { if (e.name !== "AbortError") toast("보내기를 열지 못했습니다. 다시 눌러 주세요."); });
+      .catch(e => {
+        if (e.name === "AbortError") return;                       // 사용자가 취소
+        console.error("share", e);
+        let saved = true;
+        for (const f of sendFiles) saved = saveBlob(f, f.name) && saved;
+        if (saved) toast("바로 보내기가 되지 않아 이미지로 저장했습니다. 카카오톡에서 첨부해 주세요.");
+        $("#sendSheet").hidden = true;
+      });
     return;
   }
-  // 공유를 지원하지 않는 브라우저: 파일로 저장 후 안내
-  if (saveBlob(sendFile, sendFile.name)){
+  // 공유를 지원하지 않는 브라우저: 이미지로 저장 후 안내
+  let saved = true;
+  for (const f of sendFiles) saved = saveBlob(f, f.name) && saved;
+  if (saved){
     toast(kind === "sms"
-      ? "PDF를 저장했습니다. 문자 앱에서 파일을 첨부해 보내 주세요."
-      : "PDF를 저장했습니다. 카카오톡에서 파일을 첨부해 보내 주세요.");
+      ? "이미지 2장을 저장했습니다. 문자 앱에서 첨부해 보내 주세요."
+      : "이미지 2장을 저장했습니다. 카카오톡에서 첨부해 보내 주세요.");
   }
   $("#sendSheet").hidden = true;
 }
@@ -989,18 +760,19 @@ $("#sendKakao").addEventListener("click", () => shareTo("kakao"));
 $("#sendSms").addEventListener("click", () => shareTo("sms"));
 $("#sendClose").addEventListener("click", () => { $("#sendSheet").hidden = true; });
 $("#sendSheet").addEventListener("click", e => { if (e.target.id === "sendSheet") $("#sendSheet").hidden = true; });
-$("#btnPrint").addEventListener("click", () => { fillDoc(); window.print(); });
-window.addEventListener("beforeprint", fillDoc);
+$("#btnPrint").addEventListener("click", () => { fillDoc(); fillReceipt(); window.print(); });
+window.addEventListener("beforeprint", () => { fillDoc(); fillReceipt(); });
 
 /* 미리보기 */
 const preview = $("#preview");
 async function openPreview(){
   preview.classList.add("open"); preview.classList.remove("zoom");
   document.body.style.overflow = "hidden";
-  $("#pwImg").removeAttribute("src"); $("#pwHint").textContent = "만드는 중…";
+  $("#pwImg").removeAttribute("src"); $("#pwImg2").removeAttribute("src"); $("#pwHint").textContent = "만드는 중…";
   try {
-    const canvas = await renderSheetCanvas();
-    $("#pwImg").src = canvas.toDataURL("image/jpeg", 0.92);
+    fillDoc(); fillReceipt();
+    $("#pwImg").src = (await renderDocCanvas("printDoc")).toDataURL("image/jpeg", 0.92);
+    $("#pwImg2").src = (await renderDocCanvas("printReceipt")).toDataURL("image/jpeg", 0.92);
     $("#pwHint").textContent = "화면을 누르면 확대됩니다";
   } catch (err){ console.error(err); closePreview(); toast("미리보기를 만들지 못했습니다."); }
 }
@@ -1019,6 +791,49 @@ document.addEventListener("keydown", e => {
   if (preview.classList.contains("open")) closePreview();
   else if (pv.view.classList.contains("open")) closePad();
 });
+
+/* ─────────────────────────────────────────────
+   임시저장 — 작성 중 내용을 기기에 자동 보관
+   ───────────────────────────────────────────── */
+const DRAFT_KEY = "ilsan-contract-draft";
+let draftTimer = null;
+
+function saveDraft(){
+  try {
+    const d = collect();
+    const filled = Object.keys(d).some(k => k !== "director" && k !== "conductor" && d[k]);
+    if (!filled) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ at: Date.now(), data: d }));
+    const t = new Date();
+    $("#draftMark").textContent = `임시저장됨 ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    $("#draftMark").hidden = false;
+  } catch (e){ /* 저장 공간 문제 등은 무시 */ }
+}
+function clearDraft(){
+  try { localStorage.removeItem(DRAFT_KEY); } catch {}
+  $("#draftMark").hidden = true;
+}
+function queueDraft(){ clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 1200); }
+$("#form").addEventListener("input", queueDraft);
+
+(function restoreDraft(){
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch {}
+  if (!saved || !saved.data) return;
+  const t = new Date(saved.at);
+  const name = saved.data.dName || "작성 중이던 계약서";
+  const bar = document.createElement("div");
+  bar.className = "draftbar";
+  bar.innerHTML = `<span><b>${name}</b> · ${t.getMonth()+1}월 ${t.getDate()}일 `
+    + `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")} 임시저장</span>
+       <button type="button" class="go">이어서 작성</button>
+       <button type="button" class="no">새로 시작</button>`;
+  document.body.prepend(bar);
+  bar.querySelector(".go").addEventListener("click", () => {
+    apply(saved.data); bar.remove(); toast("이어서 작성합니다.");
+  });
+  bar.querySelector(".no").addEventListener("click", () => { clearDraft(); bar.remove(); });
+})();
 
 /* 작업 저장 · 불러오기 */
 function collect(){
@@ -1075,16 +890,18 @@ function setStatus(text, warn){
 $("#btnSaveServer").addEventListener("click", () => {
   if (!readyToSend()) return;
   withBusy($("#btnSaveServer"), "저장 중…", async () => {
-    const blob = await buildPDF();
-    const savedLocal = saveBlob(blob, pdfName());    // 태블릿 보관용
-    if (!window.FB){ toast("PDF를 저장했습니다."); return; }
+    const files = await buildImages();
+    let savedLocal = true;
+    for (const f of files) savedLocal = saveBlob(f, f.name) && savedLocal;   // 태블릿 보관용
+    if (!window.FB){ toast("계약서·영수증 2장을 저장했습니다."); return; }
     const res = await window.FB.save(collect(), staffName());
     dirty = false;
     if (!savedLocal){
-      toast("PDF 저장이 막혀 있습니다. 위쪽 버튼으로 브라우저에서 열어 다시 눌러 주세요.");
+      toast("이미지 저장이 막혀 있습니다. 위쪽 버튼으로 브라우저에서 열어 다시 눌러 주세요.");
       return;
     }
-    toast("PDF를 저장했습니다.");
+    clearDraft();
+    toast("계약서·영수증 2장을 저장했습니다.");
   });
 });
 
@@ -1094,12 +911,13 @@ $("#btnReset").addEventListener("click", () => {
   $$("[data-qty]").forEach(el => el.closest(".item").classList.remove("on"));
   pads.sigChief.clear(); pads.sigStaff.clear();
   $("#signedAtView").textContent = "—"; syncExplainer();
-  recalc(); dirty = false; window.scrollTo({ top: 0 });
+  recalc(); dirty = false; clearDraft(); window.scrollTo({ top: 0 });
 });
 window.addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.returnValue = ""; } });
 </script>
 
-<div id="printDoc" class="doc" aria-hidden="true"></div>
+<div id="printDoc" class="doc printdoc" aria-hidden="true"></div>
+<div id="printReceipt" class="doc receipt printdoc" aria-hidden="true"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";

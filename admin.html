@@ -6,6 +6,8 @@
 <title>의전계약서 관리</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
 
+<link rel="stylesheet" href="contract-doc.css">
+<script src="contract-doc.js"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{--ink:#1B2A2E;--bg:#E9ECEA;--line:#C6CDC9;--soft:#E4E8E6;--celadon:#4F7367;--tint:#EFF3F1;--muted:#6C7873;--r:3px}
@@ -75,6 +77,22 @@ a.pdf:hover{text-decoration:underline}
   .wrap,.modal .bar{display:none!important}
   .modal{position:static;background:none;padding:0}
   .modal .sheet{max-width:none;padding:0}
+}
+
+.modal .sheet{max-width:860px}
+.meta-line{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.meta-line b{font-size:19px}
+.meta-line span{font-size:12.5px;color:var(--muted)}
+.docwrap{display:flex;flex-direction:column;gap:16px;align-items:center}
+.docwrap .doc{box-shadow:0 1px 6px rgba(27,42,46,.18);transform-origin:top center}
+@media (max-width:900px){ .docwrap .doc{transform:scale(.82)} .docwrap{gap:0} }
+@media print{
+  .wrap,.modal .bar,.meta-line{display:none!important}
+  .modal{position:static;background:none;padding:0}
+  .modal .sheet{max-width:none;padding:0;box-shadow:none}
+  .docwrap{gap:0}
+  .docwrap .doc{box-shadow:none;break-after:page}
+  .docwrap .doc:last-child{break-after:auto}
 }
 </style>
 </head>
@@ -218,69 +236,53 @@ function render(){
   $("#sumAmt").textContent = fmt(rows.reduce((a, r) => a + (Number(r.balance) || 0), 0));
 }
 
-/* 계약 상세 보기 */
-const LABEL = {
-  receiptDate:"접수일자", place:"의전 장소", religion:"종교",
-  dName:"고인 성명", dSex:"성별", origin:"본관", age:"연령", height:"신장", dAddr:"고인 주소",
-  cause:"사망 원인", causeEtc:"기타 사유", method:"장법", burialSite:"장지",
-  chief:"상주 성명", relation:"관계", telHome:"자택", telMobile:"휴대폰",
-  famSon:"자", famSonW:"자부", famDau:"녀", famDauH:"사위",
-  director:"염습/입관", coffinDate:"입관 일자", coffinTime:"입관 시각",
-  helperCnt:"도우미 인원", helperHour:"도우미 시간", day1:"1일차", day2:"2일차",
-  conductor:"의전 진행", vehicle:"장의 차량",
-  funeralDate:"발인 일자", funeralTime:"발인 시각", cremDate:"화장·하관 일자", cremTime:"화장·하관 시각",
-  productAmt:"상품 금액", extraAmt:"추가 금액"
-};
-const GROUPS = [
-  ["접수", ["receiptDate","place","religion"]],
-  ["기본 사항", ["dName","dSex","origin","age","height","dAddr","cause","causeEtc","method","burialSite",
-                "chief","relation","telHome","telMobile","famSon","famSonW","famDau","famDauH"]],
-  ["서비스 · 일정", ["director","coffinDate","coffinTime","helperCnt","helperHour","day1","day2",
-                  "conductor","vehicle","funeralDate","funeralTime","cremDate","cremTime"]],
-  ["금액", ["productAmt","extraAmt"]]
-];
-const itemName = k => k.replace(/^(qty|amt)_/, "").replace(/_2$/, " (추가)").replace(/_/g, " ");
+/* 계약 상세 보기 — 고객이 받는 계약서·영수증과 같은 문서로 표시 */
 const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
 function showDetail(r){
   const p = r.payload || {};
-  let html = `<h2>${esc(r.deceasedName || "—")} <span>${esc(r.receiptDate || "")}</span></h2>`;
-
-  GROUPS.forEach(([title, keys]) => {
-    const rows = keys.filter(k => p[k]).map(k => `<dt>${LABEL[k]}</dt><dd>${esc(p[k])}</dd>`).join("");
-    if (rows) html += `<h3>${title}</h3><dl>${rows}</dl>`;
-  });
-
-  const items = Object.keys(p).filter(k => k.startsWith("qty_") && Number(p[k]) > 0);
-  const amts  = Object.keys(p).filter(k => k.startsWith("amt_") && p[k]);
-  const names = [...new Set([...items.map(itemName), ...amts.map(itemName)])];
-  if (names.length){
-    html += `<h3>상품</h3><table class="it"><tr><th>품목</th><th>수량</th><th>금액</th></tr>` +
-      names.map(n => {
-        const qk = Object.keys(p).find(k => k.startsWith("qty_") && itemName(k) === n);
-        const ak = Object.keys(p).find(k => k.startsWith("amt_") && itemName(k) === n);
-        return `<tr><td>${esc(n)}</td><td>${esc(qk ? p[qk] : "")}</td><td>${esc(ak ? p[ak] + "원" : "")}</td></tr>`;
-      }).join("") + `</table>`;
-  }
-
-  html += `<div class="bal">총 잔여금액 <b>${fmt(r.balance)}원</b></div>`;
-  if (p.payYear || p.payMonth || p.payDay)
-    html += `<p class="muted">지급 약정일 ${esc(p.payYear)}년 ${esc(p.payMonth)}월 ${esc(p.payDay)}일</p>`;
-
-  html += `<h3>서명</h3><div class="sigs">
-    <figure>${p._sigChief ? `<img src="${p._sigChief}" alt="상주 서명">` : "<em>없음</em>"}<figcaption>상주 / 회원 · ${esc(p.chief || "")}</figcaption></figure>
-    <figure>${p._sigStaff ? `<img src="${p._sigStaff}" alt="책임자 서명">` : "<em>없음</em>"}<figcaption>의전 책임자 · ${esc(p.conductor || "")}</figcaption></figure>
-  </div>
-  <p class="muted">서명일시 ${esc(r.signedAt || "—")} · 담당 ${esc(r.staff || r.conductor || "—")} · 문서번호 ${esc(r.id)}</p>`;
-
-  $("#detailBody").innerHTML = html;
+  const get = name => {
+    const v = p[name];
+    return v === undefined || v === null ? "" : String(v);
+  };
+  $("#detailBody").innerHTML = `
+    <div class="meta-line">
+      <b>${esc(r.deceasedName || "—")}</b>
+      <span>접수 ${esc(r.receiptDate || "—")} · 담당 ${esc(r.staff || r.conductor || "—")}
+            · 서명일시 ${esc(r.signedAt || "—")} · 문서번호 ${esc(r.id)}</span>
+    </div>
+    ${r.pdfUrl ? `<p><a class="pdf" href="${r.pdfUrl}" target="_blank" rel="noopener">저장된 PDF 열기 (이전 기록)</a></p>` : ""}
+    ${!r.pdfUrl && r.pdfChunks ? `<p><a class="pdf" href="#" data-pdf="${r.id}">저장된 PDF 열기 (이전 기록)</a></p>` : ""}
+    <div class="docwrap">
+      <div id="viewContract" class="doc"></div>
+      <div id="viewReceipt" class="doc receipt"></div>
+    </div>`;
+  fillContract(document.getElementById("viewContract"), get);
+  fillReceiptDoc(document.getElementById("viewReceipt"), get);
   $("#detail").hidden = false;
 }
+
 $("#rows").addEventListener("click", e => {
   const a = e.target.closest("[data-view]"); if (!a) return;
   e.preventDefault();
   const r = all.find(x => x.id === a.dataset.view);
   if (r) showDetail(r);
+});
+/* 이전 버전에서 Firestore에 분할 저장된 PDF 복원 */
+$("#detailBody").addEventListener("click", async e => {
+  const a = e.target.closest("[data-pdf]"); if (!a) return;
+  e.preventDefault();
+  const keep = a.textContent; a.textContent = "불러오는 중…";
+  try {
+    const snap = await getDocs(collection(db, "contractPdfs", a.dataset.pdf, "chunks"));
+    const b64 = snap.docs.sort((x, y) => x.id.localeCompare(y.id)).map(d => d.data().data).join("");
+    const bin = atob(b64), buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err){ console.error(err); alert("저장된 PDF를 불러오지 못했습니다."); }
+  finally { a.textContent = keep; }
 });
 $("#detailClose").addEventListener("click", () => { $("#detail").hidden = true; });
 $("#detailPrint").addEventListener("click", () => window.print());
