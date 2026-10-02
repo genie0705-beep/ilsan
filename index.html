@@ -887,8 +887,11 @@ function setStatus(text, warn){
   el.classList.toggle("warn", !!warn);
 }
 
+let savedOnce = false;
 $("#btnSaveServer").addEventListener("click", () => {
   if (!readyToSend()) return;
+  if (savedOnce && !dirty &&
+      !confirm("이미 저장한 계약서입니다. 한 번 더 저장하면 같은 내용이 두 건으로 남습니다.\n그래도 저장할까요?")) return;
   withBusy($("#btnSaveServer"), "저장 중…", async () => {
     const files = await buildImages();
     let savedLocal = true;
@@ -900,7 +903,7 @@ $("#btnSaveServer").addEventListener("click", () => {
       toast("이미지 저장이 막혀 있습니다. 위쪽 버튼으로 브라우저에서 열어 다시 눌러 주세요.");
       return;
     }
-    clearDraft();
+    clearDraft(); savedOnce = true;
     toast("계약서·영수증 2장을 저장했습니다.");
   });
 });
@@ -911,7 +914,7 @@ $("#btnReset").addEventListener("click", () => {
   $$("[data-qty]").forEach(el => el.closest(".item").classList.remove("on"));
   pads.sigChief.clear(); pads.sigStaff.clear();
   $("#signedAtView").textContent = "—"; syncExplainer();
-  recalc(); dirty = false; clearDraft(); window.scrollTo({ top: 0 });
+  recalc(); dirty = false; savedOnce = false; clearDraft(); window.scrollTo({ top: 0 });
 });
 window.addEventListener("beforeunload", e => { if (dirty){ e.preventDefault(); e.returnValue = ""; } });
 </script>

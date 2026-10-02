@@ -94,6 +94,10 @@ a.pdf:hover{text-decoration:underline}
   .docwrap .doc{box-shadow:none;break-after:page}
   .docwrap .doc:last-child{break-after:auto}
 }
+.btn.danger{border-color:#B4483C;color:#B4483C}
+.btn.danger:disabled{border-color:var(--line);color:var(--muted);cursor:default}
+th.chk,td.chk{width:38px;text-align:center;padding:9px 6px}
+td.chk input,th.chk input{width:17px;height:17px}
 </style>
 </head>
 <body>
@@ -124,10 +128,13 @@ a.pdf:hover{text-decoration:underline}
         <input type="date" id="to" title="종료일">
         <input type="text" id="q" class="grow" placeholder="고인명 · 상주명 · 담당자 검색">
         <button class="btn" id="btnReload">새로고침</button>
+        <button class="btn" id="btnDupe">중복 선택</button>
+        <button class="btn danger" id="btnDelete" disabled>선택 삭제</button>
       </div>
       <div style="overflow:auto;max-height:70vh">
         <table>
           <thead><tr>
+            <th class="chk"><input type="checkbox" id="checkAll" aria-label="전체 선택"></th>
             <th>접수일자</th><th>고인명</th><th>상주명</th><th>연락처</th>
             <th>장례식장</th><th>담당자</th><th class="num">총 잔여금액</th>
             <th>서명일시</th><th>계약서</th>
@@ -159,7 +166,7 @@ a.pdf:hover{text-decoration:underline}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getFirestore, collection, query, orderBy, limit, getDocs }
+import { getFirestore, collection, query, orderBy, limit, getDocs, doc, deleteDoc }
   from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -221,6 +228,7 @@ function render(){
   const rows = filtered();
   $("#rows").innerHTML = rows.map(r => `
     <tr>
+      <td class="chk"><input type="checkbox" class="pick" value="${r.id}" aria-label="선택"></td>
       <td>${r.receiptDate || "—"}</td>
       <td><b>${r.deceasedName || "—"}</b></td>
       <td>${r.chiefName || "—"}</td>
@@ -233,6 +241,8 @@ function render(){
     </tr>`).join("");
   $("#empty").hidden = rows.length > 0;
   $("#cnt").textContent = rows.length;
+  if ($("#checkAll")) $("#checkAll").checked = false;
+  if (typeof syncDelete === "function") syncDelete();
   $("#sumAmt").textContent = fmt(rows.reduce((a, r) => a + (Number(r.balance) || 0), 0));
 }
 
@@ -288,6 +298,56 @@ $("#detailClose").addEventListener("click", () => { $("#detail").hidden = true; 
 $("#detailPrint").addEventListener("click", () => window.print());
 $("#detail").addEventListener("click", e => { if (e.target.id === "detail") $("#detail").hidden = true; });
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("#detail").hidden = true; });
+
+/* ── 선택 · 중복 정리 · 삭제 ── */
+const picked = () => Array.from(document.querySelectorAll(".pick:checked")).map(e => e.value);
+function syncDelete(){
+  const n = picked().length;
+  $("#btnDelete").disabled = n === 0;
+  $("#btnDelete").textContent = n ? `선택 삭제 (${n})` : "선택 삭제";
+}
+$("#rows").addEventListener("change", e => { if (e.target.classList.contains("pick")) syncDelete(); });
+$("#checkAll").addEventListener("change", e => {
+  document.querySelectorAll(".pick").forEach(c => { c.checked = e.target.checked; });
+  syncDelete();
+});
+
+/* 같은 내용이 여러 건이면 가장 오래된 1건만 남기고 나머지를 선택 */
+$("#btnDupe").addEventListener("click", () => {
+  const seen = new Map();
+  const dupes = [];
+  filtered().slice().sort((a, b) => String(a.id).localeCompare(String(b.id))).forEach(r => {
+    const key = [r.deceasedName, r.chiefName, r.receiptDate, r.balance, r.signedAt, r.place].join("|");
+    if (seen.has(key)) dupes.push(r.id); else seen.set(key, r.id);
+  });
+  document.querySelectorAll(".pick").forEach(c => { c.checked = dupes.includes(c.value); });
+  $("#checkAll").checked = false;
+  syncDelete();
+  alert(dupes.length
+    ? `중복 ${dupes.length}건을 선택했습니다. 각 내용의 가장 먼저 저장된 1건은 남겨 두었습니다.\n확인 후 '선택 삭제'를 누르세요.`
+    : "중복된 계약서가 없습니다.");
+});
+
+$("#btnDelete").addEventListener("click", async () => {
+  const ids = picked();
+  if (!ids.length) return;
+  const names = ids.slice(0, 5).map(id => {
+    const r = all.find(x => x.id === id);
+    return `· ${r ? (r.deceasedName || "—") + " / " + (r.receiptDate || "") : id}`;
+  }).join("\n");
+  if (!confirm(`계약서 ${ids.length}건을 삭제합니다. 되돌릴 수 없습니다.\n\n${names}${ids.length > 5 ? "\n…" : ""}`)) return;
+
+  const btn = $("#btnDelete"); btn.disabled = true; btn.textContent = "삭제 중…";
+  let ok = 0, fail = 0;
+  for (const id of ids){
+    try { await deleteDoc(doc(db, "contracts", id)); ok++; }
+    catch (e){ console.error(id, e); fail++; }
+  }
+  if (fail) { await load(); }                  // 실패가 있으면 서버에서 다시 읽어 맞춤
+  else { all = all.filter(r => !ids.includes(r.id)); render(); }
+  syncDelete();
+  alert(fail ? `${ok}건 삭제, ${fail}건 실패했습니다.` : `${ok}건을 삭제했습니다.`);
+});
 
 $("#btnCsv").addEventListener("click", () => {
   const rows = filtered();
