@@ -349,7 +349,23 @@ body > *:not(.printdoc){display:none!important}
   </section>
 
   <section>
-    <div class="sec-head"><span class="no">4</span><h2>고객 안내사항 · 서명</h2></div>
+    <div class="sec-head"><span class="no">4</span><h2>영수증</h2><span class="hint">영수증에만 들어가는 내용입니다</span></div>
+    <div class="sec-body grid money">
+      <div class="f c2"><label for="issueDate">영수일자</label><input type="date" id="issueDate" name="issueDate"></div>
+      <div class="f c2"><label for="issuer">영수자</label><input type="text" id="issuer" name="issuer" style="text-align:left"></div>
+      <div class="f c2 unit"><label for="monthlyAmt">월 불입액</label>
+        <input type="text" inputmode="numeric" id="monthlyAmt" name="monthlyAmt" class="won"><i>원</i></div>
+      <div class="f c2 unit"><label for="payCount">불입 회차</label>
+        <input type="number" inputmode="numeric" id="payCount" name="payCount" min="0"><i>회</i></div>
+      <div class="f c4 unit"><label for="paidAmt">불입 금액 <em style="font-style:normal;color:var(--muted)">(총 잔여금액에서 차감)</em></label>
+        <input type="text" inputmode="numeric" id="paidAmt" name="paidAmt" class="won"><i>원</i></div>
+      <div class="f c12"><label for="remark">비고 <em style="font-style:normal;color:var(--muted)">(상품 행에 표시)</em></label>
+        <input type="text" id="remark" name="remark" value="모든 상품 일체" style="text-align:left"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="no">5</span><h2>고객 안내사항 · 서명</h2></div>
     <div class="sec-body">
       <div class="two">
         <div>
@@ -424,6 +440,8 @@ body > *:not(.printdoc){display:none!important}
   <div class="pw-stage" id="pwStage"><div class="paper"><img id="pwImg" alt="의전계약서 미리보기"><img id="pwImg2" alt="영수증 미리보기" style="margin-top:10px"></div></div>
   <div class="pw-foot">
     <button type="button" class="btn ghost" id="pwClose">닫기</button>
+    <button type="button" class="btn" id="pwSave1">계약서만 저장</button>
+    <button type="button" class="btn" id="pwSave2">영수증만 저장</button>
     <button type="button" class="btn" id="pwSign">서명 받기</button>
     <button type="button" class="btn primary" id="pwSend">보내기</button>
   </div>
@@ -527,7 +545,7 @@ function sumExtras(){ recalc(); }
 function recalc(){
   const extra = $$("[data-amt]").reduce((a, el) => a + num(el.value), 0);
   $("#extraAmt").value = extra ? fmt(extra) : "";
-  const b = num($("#productAmt").value) + extra;
+  const b = num($("#productAmt").value) + extra - num($("#paidAmt").value);
   $("#balance").value = b;
   $("#balanceView").innerHTML = fmt(b) + "<small>원</small>";
 }
@@ -784,6 +802,14 @@ $("#pwStage").addEventListener("click", () => {
   preview.classList.toggle("zoom");
   $("#pwHint").textContent = preview.classList.contains("zoom") ? "다시 누르면 전체가 보입니다" : "화면을 누르면 확대됩니다";
 });
+$("#pwSave1").addEventListener("click", () => saveOne(0));
+$("#pwSave2").addEventListener("click", () => saveOne(1));
+function saveOne(i){
+  withBusy(i ? $("#pwSave2") : $("#pwSave1"), "저장 중…", async () => {
+    const files = await buildImages();
+    if (saveBlob(files[i], files[i].name)) toast((i ? "영수증" : "계약서") + " 이미지를 저장했습니다.");
+  });
+}
 $("#pwSign").addEventListener("click", () => { closePreview(); openPad("sigChief"); });
 $("#pwSend").addEventListener("click", () => { closePreview(); $("#btnSend").click(); });
 document.addEventListener("keydown", e => {
@@ -878,6 +904,7 @@ function askStaff(){
 }
 $("#btnStaff").addEventListener("click", askStaff);
 if (staffName() && !$("#conductor").value.trim()){ $("#conductor").value = staffName(); syncExplainer(); }
+// 영수자는 비워두면 의전 진행자가 들어갑니다
 
 window.__setStatus = setStatus;
 function setStatus(text, warn){
@@ -894,8 +921,11 @@ $("#btnSaveServer").addEventListener("click", () => {
       !confirm("이미 저장한 계약서입니다. 한 번 더 저장하면 같은 내용이 두 건으로 남습니다.\n그래도 저장할까요?")) return;
   withBusy($("#btnSaveServer"), "저장 중…", async () => {
     const files = await buildImages();
-    let savedLocal = true;
-    for (const f of files) savedLocal = saveBlob(f, f.name) && savedLocal;   // 태블릿 보관용
+    let savedLocal = saveBlob(files[0], files[0].name);                      // 계약서
+    if (savedLocal){
+      await new Promise(r => setTimeout(r, 900));                            // 연속 다운로드 차단 완화
+      savedLocal = saveBlob(files[1], files[1].name) && savedLocal;          // 영수증
+    }
     if (!window.FB){ toast("계약서·영수증 2장을 저장했습니다."); return; }
     const res = await window.FB.save(collect(), staffName());
     dirty = false;

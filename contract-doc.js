@@ -124,7 +124,7 @@ function fillContract(root, val){
       ${goodsTable(val, ["상복","추가용품"], true)}
     </div>
     <div class="d-total">
-      <span>상품 금액 <b class="s">${fmt(num(val("productAmt")))}원</b> &nbsp;+&nbsp; 추가 금액 <b class="s">${fmt(num(val("extraAmt")))}원</b></span>
+      <span>상품 금액 <b class="s">${fmt(num(val("productAmt")))}원</b> &nbsp;+&nbsp; 추가 금액 <b class="s">${fmt(num(val("extraAmt")))}원</b>${num(val("paidAmt")) ? ` &nbsp;−&nbsp; 불입 금액 <b class="s">${fmt(num(val("paidAmt")))}원</b>` : ""}</span>
       <span>총 잔여금액 &nbsp;<b>${fmt(num(val("balance")))} 원</b></span>
     </div>
 
@@ -177,22 +177,25 @@ function fillContract(root, val){
 function fillReceiptDoc(root, val){
   const today = new Date();
   const stamp = (val("signedAt") || "").replace(/\s*\d{1,2}:\d{2}\s*$/, "").trim();
-  const paidDate = stamp || `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}.`;
+  const issued = val("issueDate") ? dt(val("issueDate")) : "";
+  const paidDate = issued || stamp || `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}.`;
   const [py, pm, pd] = paidDate.replace(/\./g, " ").trim().split(/\s+/);
   const won = v => (num(v) ? fmt(num(v)) + "원" : "");
 
   const product = num(val("productAmt"));
+  const paid = num(val("paidAmt"));
+  const left = product - paid;
   const adds = ITEMS.filter(it => it.amount && num(val("amt_" + it.key.slice(4))) > 0)
     .map(it => {
       const q = Number(val(it.key)) || 1, a = num(val("amt_" + it.key.slice(4)));
       return { name: it.name, q, unit: Math.round(a / q), amt: a };
     });
   const extra = adds.reduce((t, x) => t + x.amt, 0);
-  const total = product + extra;
+  const total = left + extra;                      // 잔액 + 추가항목
 
   const rows = [
     `<tr><td class="l">${COMPANY.name.split("(")[0]} 상품</td><td>1</td><td class="r">${fmt(product)}</td>
-         <td class="r">${fmt(product)}</td><td colspan="2">모든 상품 일체</td></tr>`,
+         <td class="r">${fmt(product)}</td><td colspan="2">${hx(val("remark")) || "모든 상품 일체"}</td></tr>`,
     ...adds.map(x => `<tr><td class="l">${hx(x.name)}</td><td>${x.q}</td><td class="r">${fmt(x.unit)}</td>
          <td class="r">${fmt(x.amt)}</td><td colspan="2"></td></tr>`),
     ...Array.from({ length: Math.max(0, 8 - adds.length) },
@@ -213,9 +216,12 @@ function fillReceiptDoc(root, val){
       <tr><th>업 태</th><td colspan="3">${COMPANY.type}</td><th>종 목</th><td>${COMPANY.item}</td></tr>
       <tr><th>사업장소재지</th><td colspan="5">${COMPANY.addr}</td></tr>
       <tr><th>의전일자</th><td colspan="1" class="nw">${dt(val("receiptDate"))} ~ ${(val("funeralDate") || "").split("-").slice(1).map(n => +n).join(". ")}${val("funeralDate") ? "." : ""}</td>
-          <th>영수일자</th><td>${paidDate}</td><th>영수자</th><td>${hx(val("conductor")) || COMPANY.ceo}</td></tr>
+          <th>영수일자</th><td>${paidDate}</td>
+          <th>영수자</th><td>${hx(val("issuer")) || hx(val("conductor")) || COMPANY.ceo}</td></tr>
       <tr><th>상품금액</th><th>월 불입액</th><th>불입 회차</th><th>불입 금액</th><th colspan="2">잔 액</th></tr>
-      <tr><td class="r">${won(product)}</td><td></td><td></td><td></td><td colspan="2" class="r b">${won(product)}</td></tr>
+      <tr><td class="r">${won(product)}</td><td class="r">${won(val("monthlyAmt"))}</td>
+          <td>${hx(val("payCount")) ? hx(val("payCount")) + "회" : ""}</td><td class="r">${won(paid)}</td>
+          <td colspan="2" class="r b">${won(left)}</td></tr>
 
       <tr><th colspan="6" class="mid">고객요청 추가 항목</th></tr>
       <tr><th>품 목</th><th>수량</th><th>단가</th><th>금액</th><th colspan="2">비 고</th></tr>
@@ -224,7 +230,7 @@ function fillReceiptDoc(root, val){
 
       <tr><th colspan="6" class="bank">결 산 금 액 &nbsp;( <span>${COMPANY.bank.replace(/\s(\S+)$/, '</span> $1')} )</th></tr>
       <tr><th colspan="2">잔 액</th><th colspan="2">추 가 항 목</th><th colspan="2">총 금 액</th></tr>
-      <tr><td colspan="2" class="r">${won(product)}</td><td colspan="2" class="r">${won(extra)}</td>
+      <tr><td colspan="2" class="r">${won(left)}</td><td colspan="2" class="r">${won(extra)}</td>
           <td colspan="2" class="r tot">${won(total)}</td></tr>
     </table>
 
