@@ -72,7 +72,7 @@ section:last-of-type{border-bottom:0}
 
 /* ── 12칸 그리드 ── */
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap)}
-.f{display:flex;flex-direction:column;gap:2px;min-width:0}
+.f{display:flex;flex-direction:column;gap:2px;min-width:0;align-self:start}
 .c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}
 .c5{grid-column:span 5}.c6{grid-column:span 6}.c12{grid-column:span 12}
 label,.lab{font-size:var(--fs-lab);color:var(--muted);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -230,6 +230,13 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 }
 
 #printDoc,#printReceipt{position:fixed;left:-12000px;top:0}
+
+/* 날짜·시각 빠른 선택 */
+.chips{display:flex;gap:4px;margin-top:3px}
+.chips button{flex:1;font:inherit;font-size:11.5px;padding:4px 0;min-height:26px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--r);white-space:nowrap}
+.chips button:active{background:var(--celadon);border-color:var(--celadon);color:#fff}
+body.roomy .chips button{font-size:13px;min-height:34px}
 /* 좁은 화면 */
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(6,1fr)}
@@ -463,6 +470,11 @@ body > *:not(.printdoc){display:none!important}
         <small>공유 목록에서 메시지 선택 · 받는 분 번호가 복사됩니다</small>
       </button>
     </div>
+    <div class="one-row" id="sendOne" hidden>
+      <span>한 장씩 보내기</span>
+      <button type="button" class="btn" id="sendOne1">계약서</button>
+      <button type="button" class="btn" id="sendOne2">영수증</button>
+    </div>
     <button type="button" class="btn ghost" id="sendClose" style="width:100%;margin-top:10px">닫기</button>
   </div>
 </div>
@@ -556,6 +568,100 @@ $$(".won").forEach(el => {
 });
 recalc();
 $("#form").addEventListener("input", markDirty);
+
+/* ─────────────────────────────────────────────
+   입력 편의 — 날짜 빠른 선택, 자주 쓰는 값 목록
+   ───────────────────────────────────────────── */
+const RECENT_KEY = "ilsan-recent";
+const TEXT_PRESETS = {
+  place: [], dAddr: [], burialSite: [], conductor: [], issuer: [],
+  religion: ["불교","기독교","천주교","무교","원불교"],
+  origin: ["김해","전주","경주","밀양","파평","안동","청주","광산","해주","남양"],
+  relation: ["장남","차남","장녀","차녀","배우자","자","며느리","사위","손자"],
+  director: ["1급 전문장례지도사 2명","1급 전문장례지도사 1명"],
+  day1: ["2명 (09~24시)","2명 (09~18시)","1명 (09~18시)"],
+  day2: ["2명 (09~24시)","2명 (09~18시)","1명 (09~18시)"],
+  remark: ["모든 상품 일체"]
+};
+const NUM_PRESETS = {
+  age: Array.from({ length: 46 }, (_, i) => 55 + i),
+  height: Array.from({ length: 13 }, (_, i) => 140 + i * 5),
+  famSon: [0,1,2,3,4], famSonW: [0,1,2,3,4], famDau: [0,1,2,3,4], famDauH: [0,1,2,3,4],
+  helperCnt: [1,2,3,4], helperHour: [8,12,16,24], payCount: [6,12,24,36,48,60]
+};
+
+function recents(){
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "{}"); } catch { return {}; }
+}
+function rememberValue(name, value){
+  const v = String(value || "").trim();
+  if (!v) return;
+  const r = recents();
+  r[name] = [v, ...(r[name] || []).filter(x => x !== v)].slice(0, 8);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(r)); } catch {}
+  fillList(name);
+}
+function fillList(name){
+  const dl = document.getElementById("dl_" + name);
+  if (!dl) return;
+  const preset = TEXT_PRESETS[name] || (NUM_PRESETS[name] || []).map(String);
+  const list = [...new Set([...(recents()[name] || []), ...preset])];
+  dl.innerHTML = list.map(v => `<option value="${String(v).replace(/"/g, "&quot;")}"></option>`).join("");
+}
+(function setupLists(){
+  Object.keys({ ...TEXT_PRESETS, ...NUM_PRESETS }).forEach(name => {
+    const el = document.querySelector(`#form [name="${name}"]`);
+    if (!el) return;
+    const dl = document.createElement("datalist");
+    dl.id = "dl_" + name;
+    el.setAttribute("list", dl.id);
+    el.parentElement.appendChild(dl);
+    fillList(name);
+    el.addEventListener("change", () => rememberValue(name, el.value));
+  });
+})();
+
+/* 날짜 빠른 선택 — 오늘 / 내일 / 모레 */
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+(function setupDateChips(){
+  ["receiptDate","coffinDate","funeralDate","cremDate","issueDate"].forEach(name => {
+    const el = document.querySelector(`#form [name="${name}"]`);
+    if (!el) return;
+    const bar = document.createElement("div");
+    bar.className = "chips";
+    [["오늘",0],["내일",1],["모레",2]].forEach(([label, add]) => {
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.textContent = label;
+      btn.addEventListener("click", () => {
+        const d = new Date(); d.setDate(d.getDate() + add);
+        el.value = ymd(d);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      bar.appendChild(btn);
+    });
+    el.parentElement.appendChild(bar);
+  });
+  const r = $("#receiptDate");
+  if (r && !r.value) r.value = ymd(new Date());     // 접수일자는 오늘로 시작
+})();
+
+/* 시각 빠른 선택 */
+(function setupTimeChips(){
+  const sets = { coffinTime: ["10:00","11:00","14:00"], funeralTime: ["06:30","07:00","08:00"], cremTime: ["09:00","10:00","11:00"] };
+  Object.entries(sets).forEach(([name, times]) => {
+    const el = document.querySelector(`#form [name="${name}"]`);
+    if (!el) return;
+    const bar = document.createElement("div");
+    bar.className = "chips";
+    times.forEach(t => {
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.textContent = t;
+      btn.addEventListener("click", () => { el.value = t; el.dispatchEvent(new Event("input", { bubbles: true })); });
+      bar.appendChild(btn);
+    });
+    el.parentElement.appendChild(bar);
+  });
+})();
 
 /* 밀도 전환 */
 $("#btnZoom").addEventListener("click", () => {
@@ -728,6 +834,20 @@ function saveBlob(blob, name){
 
 /* 고객 전달 — 카카오톡 / 문자 선택 (계약서 · 영수증 JPG 2장) */
 let sendFiles = [];
+function shareSupport(){
+  if (!navigator.canShare || !navigator.share || !sendFiles.length) return "none";
+  try {
+    if (navigator.canShare({ files: sendFiles })) return "both";
+    if (navigator.canShare({ files: [sendFiles[0]] })) return "one";
+  } catch (e){ /* 일부 브라우저는 예외를 던짐 */ }
+  return "none";
+}
+function browserName(){
+  const m = (navigator.userAgent || "").match(
+    /KAKAOTALK|NAVER|SamsungBrowser\/[\d]+|Whale\/[\d]+|FxiOS\/[\d]+|EdgA?\/[\d]+|CriOS\/[\d]+|Chrome\/[\d]+|Version\/[\d]+/);
+  return m ? m[0] : "알 수 없음";
+}
+
 $("#btnSend").addEventListener("click", () => {
   if (!readyToSend()) return;
   withBusy($("#btnSend"), "만드는 중…", async () => {
@@ -735,47 +855,49 @@ $("#btnSend").addEventListener("click", () => {
     const tel = val("telMobile");
     $("#sendTo").innerHTML = `받는 분 <b>${hx(val("chief")) || "—"}</b>${tel ? ` · ${hx(tel)}` : ""}`
       + ` <span style="color:var(--muted)">· 계약서 · 영수증 2장</span>`;
-    const ok = !!(navigator.canShare && navigator.canShare({ files: sendFiles }));
-    $("#sendWarn").hidden = ok;
-    if (!ok) $("#sendWarn").textContent = window.__inApp
-      ? "앱 안 브라우저라 바로 보내기가 막혀 있습니다. 화면 위 버튼으로 브라우저에서 열어 주세요."
-      : "이 브라우저는 바로 보내기를 지원하지 않습니다. 버튼을 누르면 이미지를 저장해 드리니 카카오톡에서 첨부해 주세요.";
+
+    const mode = shareSupport();
+    $("#sendOne").hidden = (mode === "both");
+    $("#sendWarn").hidden = (mode === "both");
+    if (mode === "one")
+      $("#sendWarn").textContent = "이 브라우저는 한 번에 한 장씩만 보낼 수 있습니다. 아래에서 한 장씩 보내 주세요.";
+    else if (mode === "none")
+      $("#sendWarn").innerHTML = (window.__inApp
+        ? "앱 안 브라우저라 바로 보내기가 막혀 있습니다. 화면 위 버튼으로 브라우저에서 열어 주세요."
+        : "이 브라우저는 바로 보내기를 지원하지 않습니다. 버튼을 누르면 이미지를 저장해 드리니 카카오톡에서 첨부해 주세요.")
+        + `<br><span style="font-size:11.5px">점검 결과 · ${browserName()} · 공유 미지원</span>`;
     $("#sendSheet").hidden = false;
   });
 });
 
-function shareTo(kind){
-  // 공유는 버튼을 누른 그 순간에 바로 호출해야 함 (특히 아이패드·아이폰 사파리)
+function doShare(files, kind){
   const tel = val("telMobile");
-  const canShare = navigator.canShare && navigator.canShare({ files: sendFiles });
-  if (kind === "sms" && tel && navigator.clipboard){
-    navigator.clipboard.writeText(tel.replace(/[^\d]/g, "")).catch(() => {});   // 기다리지 않음
-  }
-  if (canShare){
-    navigator.share({ files: sendFiles, title: "의전계약서 · 영수증" })
-      .then(() => { $("#sendSheet").hidden = true; })
-      .catch(e => {
-        if (e.name === "AbortError") return;                       // 사용자가 취소
-        console.error("share", e);
-        let saved = true;
-        for (const f of sendFiles) saved = saveBlob(f, f.name) && saved;
-        if (saved) toast("바로 보내기가 되지 않아 이미지로 저장했습니다. 카카오톡에서 첨부해 주세요.");
-        $("#sendSheet").hidden = true;
-      });
-    return;
-  }
-  // 공유를 지원하지 않는 브라우저: 이미지로 저장 후 안내
+  if (kind === "sms" && tel && navigator.clipboard)
+    navigator.clipboard.writeText(tel.replace(/[^\d]/g, "")).catch(() => {});
+  navigator.share({ files, title: "의전계약서" })
+    .then(() => { if (files.length > 1) $("#sendSheet").hidden = true; })
+    .catch(e => {
+      if (e.name === "AbortError") return;             // 사용자가 취소
+      console.error("share", e);
+      toast(`보내기를 열지 못했습니다 (${e.name}). 아래 '한 장씩 보내기'를 써 보세요.`);
+      $("#sendOne").hidden = false;
+    });
+}
+function shareTo(kind){
+  const mode = shareSupport();
+  if (mode === "both"){ doShare(sendFiles, kind); return; }
+  if (mode === "one"){ $("#sendOne").hidden = false; toast("한 장씩 보내 주세요."); return; }
   let saved = true;
   for (const f of sendFiles) saved = saveBlob(f, f.name) && saved;
-  if (saved){
-    toast(kind === "sms"
-      ? "이미지 2장을 저장했습니다. 문자 앱에서 첨부해 보내 주세요."
-      : "이미지 2장을 저장했습니다. 카카오톡에서 첨부해 보내 주세요.");
-  }
+  if (saved) toast(kind === "sms"
+    ? "이미지 2장을 저장했습니다. 문자 앱에서 첨부해 보내 주세요."
+    : "이미지 2장을 저장했습니다. 카카오톡에서 첨부해 보내 주세요.");
   $("#sendSheet").hidden = true;
 }
 $("#sendKakao").addEventListener("click", () => shareTo("kakao"));
 $("#sendSms").addEventListener("click", () => shareTo("sms"));
+$("#sendOne1").addEventListener("click", () => doShare([sendFiles[0]], "kakao"));
+$("#sendOne2").addEventListener("click", () => doShare([sendFiles[1]], "kakao"));
 $("#sendClose").addEventListener("click", () => { $("#sendSheet").hidden = true; });
 $("#sendSheet").addEventListener("click", e => { if (e.target.id === "sendSheet") $("#sendSheet").hidden = true; });
 $("#btnPrint").addEventListener("click", () => { fillDoc(); fillReceipt(); window.print(); });
@@ -933,6 +1055,7 @@ $("#btnSaveServer").addEventListener("click", () => {
       toast("이미지 저장이 막혀 있습니다. 위쪽 버튼으로 브라우저에서 열어 다시 눌러 주세요.");
       return;
     }
+    Object.keys(TEXT_PRESETS).forEach(n => rememberValue(n, val(n)));
     clearDraft(); savedOnce = true;
     toast("계약서·영수증 2장을 저장했습니다.");
   });
