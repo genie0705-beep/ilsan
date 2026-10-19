@@ -237,6 +237,9 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--r);white-space:nowrap}
 .chips button:active{background:var(--celadon);border-color:var(--celadon);color:#fff}
 body.roomy .chips button{font-size:13px;min-height:34px}
+
+.item .lt{flex:0 0 auto;font-style:normal;font-size:10.5px;color:var(--celadon);white-space:nowrap;min-width:0}
+body.roomy .item .lt{font-size:12.5px}
 /* 좁은 화면 */
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(6,1fr)}
@@ -310,7 +313,7 @@ body > *:not(.printdoc){display:none!important}
   </section>
 
   <section>
-    <div class="sec-head"><span class="no">2</span><h2>상품 안내</h2><span class="hint">＋／− 로 수량 · 금액은 만원 단위 (35 → 350,000)</span></div>
+    <div class="sec-head"><span class="no">2</span><h2>상품 안내</h2><span class="hint">추가용품은 개당 단가 · 만원 단위 (35 → 350,000) · 수량만큼 곱해집니다</span></div>
     <div class="sec-body">
       <div class="goods" id="goods"></div>
       <div class="moneybar">
@@ -522,7 +525,7 @@ const markDirty = () => { dirty = true; };
       col = it.group;
       box = document.createElement("div");
       box.className = "gcol" + (it.amount ? " wide" : "");
-      box.insertAdjacentHTML("beforeend", `<h3>${col}${it.amount ? '<em>수량 · 금액</em>' : ''}</h3>`);
+      box.insertAdjacentHTML("beforeend", `<h3>${col}${it.amount ? '<em>수량 · 개당 단가</em>' : ''}</h3>`);
       wrap.appendChild(box);
     }
     const row = document.createElement("div");
@@ -534,7 +537,7 @@ const markDirty = () => { dirty = true; };
         <button type="button" data-step="1" aria-label="${it.name} 늘리기">＋</button>
       </span>` + (it.amount
         ? `<span class="amt"><input type="text" inputmode="numeric" class="won" data-amt
-             name="amt_${it.key.slice(4)}" aria-label="${it.name} 금액" placeholder="만원"><i>원</i></span>`
+             name="amt_${it.key.slice(4)}" aria-label="${it.name} 단가" placeholder="단가(만원)"><i>원</i></span>`
         : "");
     box.appendChild(row);
     const amt = row.querySelector(".won");
@@ -542,7 +545,7 @@ const markDirty = () => { dirty = true; };
   });
   const sync = i => i.closest(".item").classList.toggle("on", Number(i.value) > 0);
   wrap.addEventListener("input", e => {
-    if (e.target.dataset.qty !== undefined){ sync(e.target); markDirty(); }
+    if (e.target.dataset.qty !== undefined){ sync(e.target); sumExtras(); markDirty(); }
     if (e.target.dataset.amt !== undefined){ sumExtras(); markDirty(); }
   });
   wrap.addEventListener("click", e => {
@@ -550,19 +553,37 @@ const markDirty = () => { dirty = true; };
     const i = b.parentElement.querySelector("input");
     const v = Math.max(0, (Number(i.value) || 0) + Number(b.dataset.step));
     i.value = v === 0 ? "" : v;
-    sync(i); markDirty();
+    sync(i); sumExtras(); markDirty();
   });
 })();
 
 /* 금액 */
 function sumExtras(){ recalc(); }
 function recalc(){
-  const extra = $$("[data-amt]").reduce((a, el) => a + num(el.value), 0);
+  const extra = $$("[data-amt]").reduce((a, el) => a + lineTotal(el), 0);
   $("#extraAmt").value = extra ? fmt(extra) : "";
   const b = num($("#productAmt").value) + extra - num($("#paidAmt").value);
   $("#balance").value = b;
   $("#balanceView").innerHTML = fmt(b) + "<small>원</small>";
+  showLineTotals();
 }
+/* 추가용품 한 줄 금액 = 단가 × 수량 (수량 비우면 1개로 계산) */
+function lineTotal(amtEl){
+  const row = amtEl.closest(".item");
+  const q = Number(row?.querySelector("[data-qty]")?.value) || 1;
+  return num(amtEl.value) * q;
+}
+function showLineTotals(){
+  $$("[data-amt]").forEach(el => {
+    const row = el.closest(".item");
+    const q = Number(row.querySelector("[data-qty]")?.value) || 0;
+    const unit = num(el.value);
+    let tag = row.querySelector(".lt");
+    if (!tag){ tag = document.createElement("em"); tag.className = "lt"; row.appendChild(tag); }
+    tag.textContent = (unit > 0 && q > 1) ? `×${q} = ${fmt(unit * q)}원` : "";
+  });
+}
+
 /* 금액은 만원 단위로 입력 — 35 → 350,000원 (10,000 미만이면 ×10,000) */
 const MAN = 10000;
 function expandMan(n){ return (n > 0 && n < MAN) ? n * MAN : n; }

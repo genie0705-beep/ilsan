@@ -65,7 +65,8 @@ function goodsTable(val, groups, withAmount){
   groups.forEach(g => {
     const list = ITEMS.filter(it => it.group === g);
     list.forEach((it, n) => {
-      const q = val(it.key), a = it.amount ? val("amt_" + it.key.slice(4)) : "";
+      const q = val(it.key);
+      const a = it.amount ? (num(val("amt_" + it.key.slice(4))) * (Number(q) || 1) || "") : "";
       const on = Number(q) > 0 || num(a) > 0;
       rows += `<tr class="${on ? "on" : ""}">`
         + (n === 0 ? `<td class="grp" rowspan="${list.length}">${hx(g)}</td>` : "")
@@ -185,10 +186,13 @@ function fillReceiptDoc(root, val){
   const product = num(val("productAmt"));
   const paid = num(val("paidAmt"));
   const left = product - paid;
-  const adds = ITEMS.filter(it => it.amount && num(val("amt_" + it.key.slice(4))) > 0)
+  // 금액을 적었거나 수량만 체크한 추가용품은 모두 영수증에 올림
+  const adds = ITEMS.filter(it => it.amount &&
+      (num(val("amt_" + it.key.slice(4))) > 0 || Number(val(it.key)) > 0))
     .map(it => {
-      const q = Number(val(it.key)) || 1, a = num(val("amt_" + it.key.slice(4)));
-      return { name: it.name, q, unit: Math.round(a / q), amt: a };
+      const q = Number(val(it.key)) || 1;
+      const unit = num(val("amt_" + it.key.slice(4)));   // 입력값은 개당 단가
+      return { name: it.name, q, unit: unit || null, amt: unit * q };
     });
   const extra = adds.reduce((t, x) => t + x.amt, 0);
   const total = left + extra;                      // 잔액 + 추가항목
@@ -196,8 +200,9 @@ function fillReceiptDoc(root, val){
   const rows = [
     `<tr><td class="l">${COMPANY.name.split("(")[0]} 상품</td><td>1</td><td class="r">${fmt(product)}</td>
          <td class="r">${fmt(product)}</td><td colspan="2">${hx(val("remark")) || "모든 상품 일체"}</td></tr>`,
-    ...adds.map(x => `<tr><td class="l">${hx(x.name)}</td><td>${x.q}</td><td class="r">${fmt(x.unit)}</td>
-         <td class="r">${fmt(x.amt)}</td><td colspan="2"></td></tr>`),
+    ...adds.map(x => `<tr><td class="l">${hx(x.name)}</td><td>${x.q}</td>
+         <td class="r">${x.unit === null ? "" : fmt(x.unit)}</td>
+         <td class="r">${x.amt ? fmt(x.amt) : ""}</td><td colspan="2"></td></tr>`),
     ...Array.from({ length: Math.max(0, 8 - adds.length) },
       () => `<tr><td class="l">&nbsp;</td><td></td><td></td><td></td><td colspan="2"></td></tr>`)
   ].join("");
@@ -215,7 +220,7 @@ function fillReceiptDoc(root, val){
       <tr><th>사업자등록번호</th><td colspan="3">${COMPANY.bizNo}</td><th>대표자</th><td>${COMPANY.ceo}</td></tr>
       <tr><th>업 태</th><td colspan="3">${COMPANY.type}</td><th>종 목</th><td>${COMPANY.item}</td></tr>
       <tr><th>사업장소재지</th><td colspan="5">${COMPANY.addr}</td></tr>
-      <tr><th>의전일자</th><td colspan="1" class="nw">${dt(val("receiptDate"))} ~ ${(val("funeralDate") || "").split("-").slice(1).map(n => +n).join(". ")}${val("funeralDate") ? "." : ""}</td>
+      <tr><th>의전일자</th><td colspan="1" class="nw">${(val("receiptDate") || "").replace(/-/g, ".")}${val("funeralDate") ? " ~ " + val("funeralDate").split("-").slice(1).map(n => +n).join(".") : ""}</td>
           <th>영수일자</th><td>${paidDate}</td>
           <th>영수자</th><td>${hx(val("issuer")) || hx(val("conductor")) || COMPANY.ceo}</td></tr>
       <tr><th>상품금액</th><th>월 불입액</th><th>불입 회차</th><th>불입 금액</th><th colspan="2">잔 액</th></tr>
