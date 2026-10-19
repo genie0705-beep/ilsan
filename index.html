@@ -310,12 +310,12 @@ body > *:not(.printdoc){display:none!important}
   </section>
 
   <section>
-    <div class="sec-head"><span class="no">2</span><h2>상품 안내</h2><span class="hint">＋／− 로 수량 입력</span></div>
+    <div class="sec-head"><span class="no">2</span><h2>상품 안내</h2><span class="hint">＋／− 로 수량 · 금액은 만원 단위 (35 → 350,000)</span></div>
     <div class="sec-body">
       <div class="goods" id="goods"></div>
       <div class="moneybar">
         <div class="f unit"><label for="productAmt">상품 금액</label>
-          <input type="text" inputmode="numeric" id="productAmt" name="productAmt" class="won" placeholder="상품 금액 입력"><i>원</i></div>
+          <input type="text" inputmode="numeric" id="productAmt" name="productAmt" class="won" placeholder="만원 단위 (350 → 350만)"><i>원</i></div>
         <span class="op">+</span>
         <div class="f unit"><label for="extraAmt">추가 금액 <em>(추가용품 합계 · 자동)</em></label>
           <input type="text" id="extraAmt" name="extraAmt" readonly tabindex="-1"><i>원</i></div>
@@ -534,9 +534,11 @@ const markDirty = () => { dirty = true; };
         <button type="button" data-step="1" aria-label="${it.name} 늘리기">＋</button>
       </span>` + (it.amount
         ? `<span class="amt"><input type="text" inputmode="numeric" class="won" data-amt
-             name="amt_${it.key.slice(4)}" aria-label="${it.name} 금액" placeholder="금액"><i>원</i></span>`
+             name="amt_${it.key.slice(4)}" aria-label="${it.name} 금액" placeholder="만원"><i>원</i></span>`
         : "");
     box.appendChild(row);
+    const amt = row.querySelector(".won");
+    if (amt && typeof bindMoney === "function") bindMoney(amt);
   });
   const sync = i => i.closest(".item").classList.toggle("on", Number(i.value) > 0);
   wrap.addEventListener("input", e => {
@@ -561,11 +563,26 @@ function recalc(){
   $("#balance").value = b;
   $("#balanceView").innerHTML = fmt(b) + "<small>원</small>";
 }
-$$(".won").forEach(el => {
+/* 금액은 만원 단위로 입력 — 35 → 350,000원 (10,000 미만이면 ×10,000) */
+const MAN = 10000;
+function expandMan(n){ return (n > 0 && n < MAN) ? n * MAN : n; }
+function bindMoney(el){
+  if (el.dataset.moneyBound) return;
+  el.dataset.moneyBound = "1";
   el.addEventListener("input", recalc);
-  el.addEventListener("blur", () => { if (el.value.trim()) el.value = fmt(num(el.value)); recalc(); });
-  el.addEventListener("focus", () => { el.value = String(num(el.value) || ""); });
-});
+  el.addEventListener("focus", () => {
+    el.value = String(num(el.value) || "");
+    try { el.select(); } catch {}        // 탭하면 기존 값이 선택되어 바로 덮어쓰기
+  });
+  el.addEventListener("blur", () => {
+    if (!el.value.trim()){ recalc(); return; }
+    const raw = num(el.value), v = expandMan(raw);
+    el.value = fmt(v);
+    if (v !== raw) toast(`${fmt(raw)} → ${fmt(v)}원 (만원 단위)`);
+    recalc();
+  });
+}
+$$(".won").forEach(bindMoney);
 recalc();
 $("#form").addEventListener("input", markDirty);
 
